@@ -1,4 +1,4 @@
 Imagens históricas (domínio público) usadas na aba Mídias.
 Arquivo esperado: midias/<id>-<n>.jpg (até ~1100 px).
-Ainda ausente: newton-1.jpg (canhão de Newton, A Treatise of the System of the World, 1728) e os retratos dos cientistas.
+Ainda ausentes: os retratos dos cientistas.
 Sem o arquivo, o site mostra um cartão alternativo com link de busca no Wikimedia Commons.
