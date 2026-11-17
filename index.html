@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Evolução dos Modelos Astronômicos</title>
+<style>
+  :root {
+    --bg: #060911;
+    --panel: #0d1320;
+    --panel2: #121a2b;
+    --line: #1f2b42;
+    --text: #e7ecf6;
+    --muted: #94a2bb;
+    --accent: #f2b56b;
+    --accent2: #6cc4ff;
+    --green: #7cffb2;
+    --red: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(80, 110, 190, 0.18), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(190, 120, 70, 0.12), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 20px 16px 40px; }
+  .top h1 { font-size: clamp(20px, 2.6vw, 28px); margin: 0 0 2px; letter-spacing: -0.01em; }
+  .top p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+  .kicker { color: var(--accent); font-weight: 800; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  /* ---------- Linha do tempo (navegação) ---------- */
+  nav.timeline { display: grid; grid-template-columns: repeat(5, minmax(205px, 1fr)); gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; }
+  .tgroup { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px; min-width: 205px; }
+  .tgroup .gl { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tgroup .row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .chip {
+    font: inherit; text-align: left; cursor: pointer; color: var(--text);
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px;
+    transition: border-color .15s, background .15s;
+  }
+  .chip:hover { border-color: #3a5078; }
+  .chip:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+  .chip .y { display: block; font-size: 10.5px; color: var(--accent); font-weight: 700; }
+  .chip .nm { display: block; font-size: 13px; font-weight: 700; line-height: 1.2; }
+  .chip[aria-current="true"] { background: rgba(242,181,107,.14); border-color: var(--accent); }
+
+  /* ---------- Exposição de cada cientista ---------- */
+  .expo { display: none; }
+  .expo.active { display: block; animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 20px; margin-bottom: 12px; }
+  .head h2 { margin: 2px 0 0; font-size: clamp(26px, 3.6vw, 38px); line-height: 1.1; letter-spacing: -0.015em; }
+  .head .dates { color: var(--muted); font-size: 14px; }
+  .thesis { margin: 0 0 16px; font-size: clamp(17px, 2vw, 21px); font-weight: 650; color: #fff3e0; border-left: 4px solid var(--accent); padding: 4px 0 4px 14px; max-width: 900px; }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 1000px) { .grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .stage { position: relative; aspect-ratio: 4 / 3; background: #04060c; border-bottom: 1px solid var(--line); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 14px; }
+  .ctl {
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    color: var(--text); background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 7px 12px; transition: border-color .15s, background .15s;
+  }
+  .ctl:hover { border-color: #3a5078; }
+  .ctl:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+  .ctl:disabled { opacity: .4; cursor: default; }
+  .ctl.primary { background: var(--accent); color: #1b1206; border-color: var(--accent); min-width: 108px; }
+  .ctl[aria-pressed="true"] { border-color: var(--accent2); background: rgba(108,196,255,.14); color: #d9f0ff; }
+  .rng { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 4px 10px; }
+  .rng input { accent-color: var(--accent); width: 110px; }
+  .rng output { color: var(--text); font-variant-numeric: tabular-nums; min-width: 44px; }
+
+  .observe { padding: 4px 16px 16px; }
+  .observe h3, .info h3, .foot h3 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin: 10px 0 8px; }
+  .observe h3 { color: var(--green); }
+  .observe ol { margin: 0; padding: 0; list-style: none; counter-reset: o; display: grid; gap: 8px; }
+  .observe li { counter-increment: o; position: relative; padding-left: 34px; font-size: 14.5px; }
+  .observe li::before { content: counter(o); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: rgba(124,255,178,.14); border: 1px solid rgba(124,255,178,.4); color: var(--green); font-weight: 800; font-size: 12.5px; display: grid; place-items: center; }
+
+  .info { display: flex; flex-direction: column; gap: 12px; }
+  .info .box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 4px 16px 14px; font-size: 14.5px; }
+  .info .box p { margin: 0; }
+  .info .ctx h3 { color: var(--accent); }
+  .info .prob h3 { color: var(--red); }
+  .info .idea h3 { color: var(--accent2); }
+  .info .prob { border-color: rgba(255,107,107,.3); }
+  .info .idea { border-color: rgba(108,196,255,.3); }
+  .info ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+  .info li::marker { color: var(--accent2); }
+
+  .foot { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+  @media (min-width: 1000px) { .foot { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+  .terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+  .term { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; color: var(--muted); }
+  .term b { display: block; color: var(--text); font-size: 14px; margin-bottom: 2px; }
+  .foot .kw h3 { color: var(--muted); margin-top: 0; }
+  .next { background: linear-gradient(135deg, rgba(242,181,107,.12), rgba(108,196,255,.08)); border: 1px solid rgba(242,181,107,.35); border-radius: 16px; padding: 4px 16px 14px; font-size: 14.5px; }
+  .next h3 { color: var(--accent); }
+  .next p { margin: 0 0 10px; }
+  details.math { margin-top: 16px; background: rgba(108,196,255,.06); border: 1px solid rgba(108,196,255,.18); border-radius: 12px; padding: 10px 14px; font-size: 14px; color: #c9d6ea; }
+  details.math summary { cursor: pointer; font-weight: 700; color: var(--accent2); }
+  details.math p { margin: 8px 0 0; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .95em; color: #ffe2b8; }
+  .pager { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+  .pager .ctl { padding: 10px 16px; font-size: 14px; }
+  .copy { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); text-align: center; color: var(--muted); font-size: 12.5px; }
+  .copy p { margin: 2px 0; }
+  footer { margin-top: 22px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kicker">Física · 1ª série · Astronomia</div>
+    <h1>A evolução dos modelos astronômicos</h1>
+    <p>Dez cientistas, em ordem. Em cada exposição, leia o contexto e a ideia, depois use a animação para ver o modelo funcionando. Use as setas ← → do teclado para avançar.</p>
+  </header>
+  <nav class="timeline" aria-label="Cientistas em ordem cronológica"></nav>
+  <main id="expos"></main>
+  <div class="pager">
+    <button class="ctl" type="button" id="prev">← Anterior</button>
+    <button class="ctl" type="button" id="next">Próximo →</button>
+  </div>
+  <footer>Quando indicado, distâncias e tamanhos estão fora de escala para caber na tela; os períodos e as leis do movimento são os de cada modelo.</footer>
+  <div class="copy">
+    <p>© 2026 Osvaldo Bezerra. Todos os direitos reservados.</p>
+    <p>Projeto desenvolvido por Osvaldo Bezerra. É proibida a cópia, reprodução ou uso não autorizado.</p>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Utilidades gerais
+   ===================================================================== */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = (n, d = 1) => n.toFixed(d).replace(".", ",");
+const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a)); // reduz ângulo para (-π, π]
+
+// Gerador pseudoaleatório com semente (campo de estrelas igual a cada redesenho)
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Equação de Kepler: M = E − e·sen E. Newton-Raphson: E ← E − f(E)/f'(E)
+function solveKepler(M, e) {
+  M = wrapPi(M);
+  let E = e < 0.8 ? M : M + 0.85 * e * Math.sign(Math.sin(M) || 1);
+  for (let i = 0; i < 40; i++) {
+    const f = E - e * Math.sin(E) - M;
+    const d = f / (1 - e * Math.cos(E));
+    E -= d;
+    if (Math.abs(d) < 1e-12) break;
+  }
+  return E;
+}
+
+// Campo de estrelas pré-desenhado em canvas fora da tela
+function makeStarfield(w, h, dpr, seed) {
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(w * dpr)); c.height = Math.max(1, Math.round(h * dpr));
+  const g = c.getContext("2d");
+  g.scale(dpr, dpr);
+  g.fillStyle = "#04060c"; g.fillRect(0, 0, w, h);
+  const r = rng(seed);
+  const neb = g.createRadialGradient(w * 0.75, h * 0.2, 0, w * 0.75, h * 0.2, Math.max(w, h) * 0.9);
+  neb.addColorStop(0, "rgba(70,95,170,0.13)"); neb.addColorStop(1, "rgba(0,0,0,0)");
+  g.fillStyle = neb; g.fillRect(0, 0, w, h);
+  const n = Math.round(w * h / 1400);
+  for (let i = 0; i < n; i++) {
+    const big = r() > 0.94;
+    const s = big ? 0.8 + r() * 0.9 : 0.25 + r() * 0.6;
+    g.globalAlpha = big ? 0.75 + r() * 0.25 : 0.25 + r() * 0.45;
+    g.fillStyle = r() > 0.85 ? "#ffe8c9" : r() > 0.7 ? "#cfe3ff" : "#ffffff";
+    g.beginPath(); g.arc(r() * w, r() * h, s, 0, TAU); g.fill();
+  }
+  g.globalAlpha = 1;
+  return c;
+}
+
+/* ---------- Primitivas de desenho ---------- */
+function sphere(ctx, x, y, r, color, glow = 0) {
+  if (glow) {
+    const gg = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * glow);
+    gg.addColorStop(0, color + "66"); gg.addColorStop(1, color + "00");
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, r * glow, 0, TAU); ctx.fill();
+  }
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  const sh = ctx.createRadialGradient(x - r * 0.4, y - r * 0.4, r * 0.1, x, y, r);
+  sh.addColorStop(0, "rgba(255,255,255,0.35)"); sh.addColorStop(0.55, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,0.45)");
+  ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+}
+function sun(ctx, x, y, r) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4.5);
+  g.addColorStop(0, "rgba(255,214,120,0.75)"); g.addColorStop(0.25, "rgba(255,170,60,0.25)"); g.addColorStop(1, "rgba(255,140,40,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 4.5, 0, TAU); ctx.fill();
+  const c = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+  c.addColorStop(0, "#fff7d6"); c.addColorStop(0.6, "#ffd25e"); c.addColorStop(1, "#ff9d2e");
+  ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+}
+function earth(ctx, x, y, r, glow = 2.2) {
+  sphere(ctx, x, y, r, "#3b82d6", glow);
+  ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
+  ctx.fillStyle = "rgba(90,190,120,0.9)";
+  ctx.beginPath(); ctx.ellipse(x - r * 0.25, y - r * 0.15, r * 0.35, r * 0.5, 0.5, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x + r * 0.35, y + r * 0.3, r * 0.3, r * 0.22, -0.4, 0, TAU); ctx.fill();
+  const sh = ctx.createRadialGradient(x - r * 0.4, y - r * 0.4, r * 0.1, x, y, r);
+  sh.addColorStop(0, "rgba(255,255,255,0.3)"); sh.addColorStop(0.6, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,0.5)");
+  ctx.fillStyle = sh; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+function label(ctx, text, x, y, color = "#cfd8ea", align = "left", size = 12, weight = 600) {
+  ctx.font = `${weight} ${size}px system-ui, -apple-system, Segoe UI, Roboto, sans-serif`;
+  ctx.textAlign = align; ctx.textBaseline = "middle";
+  ctx.lineWidth = 3; ctx.strokeStyle = "rgba(4,6,12,0.85)"; ctx.strokeText(text, x, y);
+  ctx.fillStyle = color; ctx.fillText(text, x, y);
+}
+function hud(ctx, lines, x = 12, y = 16) {
+  lines.forEach((l, i) => label(ctx, l.t, x, y + i * 17, l.c || "#dfe6f3", "left", l.s || 12.5, l.w || 600));
+}
+function arrow(ctx, x1, y1, x2, y2, color, width = 2, head = 8) {
+  const a = Math.atan2(y2 - y1, x2 - x1), L = Math.hypot(x2 - x1, y2 - y1);
+  if (L < 1) return;
+  const hd = Math.min(head, L * 0.6);
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(a) * hd * 0.8, y2 - Math.sin(a) * hd * 0.8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - Math.cos(a - 0.42) * hd, y2 - Math.sin(a - 0.42) * hd);
+  ctx.lineTo(x2 - Math.cos(a + 0.42) * hd, y2 - Math.sin(a + 0.42) * hd);
+  ctx.closePath(); ctx.fill();
+}
+function circle(ctx, x, y, r, stroke, width = 1, dash = null) {
+  ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.setLineDash(dash || []);
+  ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+}
+function drawTrail(ctx, pts, color, width = 1.6, colorFn = null) {
+  if (pts.length < 2) return;
+  ctx.lineWidth = width; ctx.lineCap = "round";
+  for (let i = 1; i < pts.length; i++) {
+    const a = i / pts.length;
+    ctx.strokeStyle = colorFn ? colorFn(pts[i], a) : color;
+    ctx.globalAlpha = 0.15 + 0.85 * a;
+    ctx.beginPath(); ctx.moveTo(pts[i - 1][0], pts[i - 1][1]); ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* =====================================================================
+   GRUPO 1A — ARISTÓTELES: esferas concêntricas
+   Cada astro: movimento circular uniforme θ = θ0 + 2πt/T (para leste).
+   Rotação diária opcional: todo o céu gira −2π por dia (para oeste).
+   ===================================================================== */
+const Aristoteles = {
+  seed: 11,
+  // Ordem de Platão/Aristóteles. T em dias (período ao longo do zodíaco).
+  bodies: [
+    { n: "Lua", T: 27.32, c: "#d9d6cf", r: 4.5, f: 0.3 },
+    { n: "Sol", T: 365.25, c: "#ffcf5a", r: 7, f: 2.1, sun: true },
+    { n: "Vênus", T: 365.25, c: "#f3e0b5", r: 3.6, f: 2.1 + 0.55 },   // acompanham o Sol
+    { n: "Mercúrio", T: 365.25, c: "#b9b2a8", r: 3, f: 2.1 - 0.35 },
+    { n: "Marte", T: 686.98, c: "#e0603a", r: 3.8, f: 4.4 },
+    { n: "Júpiter", T: 4332.6, c: "#e5c49a", r: 5.5, f: 0.9 },
+    { n: "Saturno", T: 10759.2, c: "#e8d39a", r: 4.8, f: 5.6 },
+  ],
+  stars: Array.from({ length: 70 }, (_, i) => { const r = rng(900 + i); return { a: r() * TAU, d: r(), s: 0.5 + r() * 1.1 }; }),
+  reset(s) { s.t = 0; s.daily = s.daily || false; },
+  controls(s) {
+    return [{ type: "toggle", label: "Rotação diária", get: () => s.daily, set: (v) => { s.daily = v; } }];
+  },
+  update(s, dt) { s.t += dt * (s.daily ? 0.35 : 25); }, // dias por segundo
+  draw(ctx, w, h, s) {
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.46;
+    const N = this.bodies.length;
+    const radius = (k) => R * (0.2 + 0.7 * k / (N - 1));
+    const spin = s.daily ? -TAU * s.t : 0; // rotação diária (sentido horário = para oeste)
+
+    // Esfera das estrelas fixas (borda externa)
+    ctx.fillStyle = "rgba(108,196,255,0.05)";
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.0, 0, TAU); ctx.arc(cx, cy, R * 0.94, 0, TAU, true); ctx.fill();
+    for (const st of this.stars) {
+      const a = st.a + spin, rr = R * (0.945 + st.d * 0.05);
+      ctx.fillStyle = "rgba(220,235,255,0.8)";
+      ctx.beginPath(); ctx.arc(cx + rr * Math.cos(a), cy - rr * Math.sin(a), st.s, 0, TAU); ctx.fill();
+    }
+    // Esferas cristalinas (faixas translúcidas)
+    for (let k = N - 1; k >= 0; k--) {
+      ctx.fillStyle = k % 2 ? "rgba(242,181,107,0.035)" : "rgba(108,196,255,0.03)";
+      ctx.beginPath(); ctx.arc(cx, cy, radius(k) + R * 0.055, 0, TAU); ctx.fill();
+      circle(ctx, cx, cy, radius(k), "rgba(242,181,107,0.28)", 1);
+    }
+    // Mundo sublunar
+    const sub = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius(0) * 0.9);
+    sub.addColorStop(0, "rgba(90,150,230,0.18)"); sub.addColorStop(1, "rgba(90,150,230,0)");
+    ctx.fillStyle = sub; ctx.beginPath(); ctx.arc(cx, cy, radius(0) * 0.9, 0, TAU); ctx.fill();
+
+    earth(ctx, cx, cy, Math.max(6, R * 0.075));
+    label(ctx, "Terra (imóvel)", cx, cy + R * 0.075 + 12, "#9fd0ff", "center", 11.5);
+
+    // Astros: posição = (R cos θ, R sen θ) com θ = θ0 + 2πt/T + rotação diária
+    this.bodies.forEach((b, k) => {
+      const th = b.f + TAU * s.t / b.T + spin;
+      const x = cx + radius(k) * Math.cos(th), y = cy - radius(k) * Math.sin(th);
+      if (b.sun) sun(ctx, x, y, b.r); else sphere(ctx, x, y, b.r, b.c, 1.8);
+      label(ctx, b.n, x + b.r + 4, y - b.r - 2, "#e8eef9", "left", 11.5);
+    });
+    label(ctx, "estrelas fixas", cx, cy - R * 0.97 + 1, "#a9c7ef", "center", 10.5);
+    label(ctx, "éter", cx + radius(0) * 0.72, cy + radius(0) * 1.18, "rgba(242,181,107,.8)", "center", 10.5);
+    hud(ctx, [
+      { t: s.daily ? `Rotação diária · ${fmt(s.t * 24, 0)} h` : `Dia ${fmt(s.t, 0)}`, c: "#f2b56b", w: 700 },
+      { t: s.daily ? "todo o céu gira para oeste" : "movimento próprio de cada esfera", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   GRUPO 1B — PTOLOMEU: epiciclo + deferente (Marte)
+   P(t) = Rd·(cos θd, sen θd) + re·(cos θe, sen θe)
+   θd = 2πt/687 d (deferente), θe = 2πt/365,25 d (epiciclo, paralelo à direção Terra–Sol)
+   ===================================================================== */
+const Ptolomeu = {
+  seed: 23,
+  Rd: 1.524, re: 1.0, Td: 686.98, Te: 365.25,
+  phD: 0, // fase calculada para que haja uma oposição (retrogradação) aos 150 dias
+  reset(s) {
+    const tOpp = 150;
+    this.phD = Math.PI + TAU * tOpp / this.Te - TAU * tOpp / this.Td;
+    s.t = 0; s.trail = []; s.sky = []; s.lastSample = -99; s.retro = false;
+  },
+  pos(t) {
+    const td = this.phD + TAU * t / this.Td, te = TAU * t / this.Te;
+    const D = [this.Rd * Math.cos(td), this.Rd * Math.sin(td)];
+    const E = [this.re * Math.cos(te), this.re * Math.sin(te)];
+    return { D, P: [D[0] + E[0], D[1] + E[1]], S: [Math.cos(te), Math.sin(te)] };
+  },
+  update(s, dt) {
+    s.t += dt * 40; // dias por segundo
+    const p = this.pos(s.t);
+    const lam = Math.atan2(p.P[1], p.P[0]);
+    const lam2 = Math.atan2(this.pos(s.t + 0.5).P[1], this.pos(s.t + 0.5).P[0]);
+    s.retro = wrapPi(lam2 - lam) < 0; // longitude diminuindo → retrógrado
+    if (s.t - s.lastSample > 2) {
+      s.lastSample = s.t;
+      s.trail.push([p.P[0], p.P[1], s.retro]);
+      s.sky.push([lam, s.retro]);
+      if (s.trail.length > 520) s.trail.shift();
+      if (s.sky.length > 200) s.sky.shift();
+    }
+  },
+  draw(ctx, w, h, s) {
+    const strip = 54, oh = h - strip;
+    const cx = w / 2, cy = oh / 2, k = Math.min(w, oh) * 0.47 / 2.55;
+    const X = (v) => cx + v[0] * k, Y = (v) => cy - v[1] * k;
+    const p = this.pos(s.t);
+
+    circle(ctx, cx, cy, k, "rgba(255,207,90,0.25)", 1, [3, 5]);           // círculo do Sol
+    circle(ctx, cx, cy, this.Rd * k, "rgba(242,181,107,0.55)", 1.4, [6, 5]); // deferente
+    circle(ctx, X(p.D), Y(p.D), this.re * k, "rgba(108,196,255,0.6)", 1.3);  // epiciclo
+
+    // Rastro: laços de retrogradação em vermelho
+    const pts = s.trail.map((q) => [X(q), Y(q), q[2]]);
+    drawTrail(ctx, pts, null, 1.8, (q) => (q[2] ? "#ff6b6b" : "#f2b56b"));
+
+    // Linha de visada Terra → Marte (até a borda)
+    const ang = Math.atan2(p.P[1], p.P[0]);
+    ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(ang) * 2000, cy - Math.sin(ang) * 2000); ctx.stroke();
+
+    ctx.strokeStyle = "rgba(242,181,107,0.8)"; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(X(p.D), Y(p.D)); ctx.stroke();
+    ctx.strokeStyle = "rgba(108,196,255,0.9)";
+    ctx.beginPath(); ctx.moveTo(X(p.D), Y(p.D)); ctx.lineTo(X(p.P), Y(p.P)); ctx.stroke();
+
+    sun(ctx, X(p.S), Y(p.S), 6);
+    label(ctx, "Sol", X(p.S) + 9, Y(p.S) - 9, "#ffd98a", "left", 11);
+    ctx.fillStyle = "#6cc4ff"; ctx.beginPath(); ctx.arc(X(p.D), Y(p.D), 2.5, 0, TAU); ctx.fill();
+    earth(ctx, cx, cy, 8);
+    sphere(ctx, X(p.P), Y(p.P), 5, s.retro ? "#ff5a4a" : "#e0603a", 2);
+    label(ctx, "Marte", X(p.P) + 8, Y(p.P) + 10, "#ffb4a2", "left", 11.5);
+    label(ctx, "deferente", cx + this.Rd * k * 0.71 + 6, cy - this.Rd * k * 0.71, "rgba(242,181,107,.9)", "left", 10.5);
+    label(ctx, "epiciclo", X(p.D), Y(p.D) - this.re * k - 8, "rgba(108,196,255,.95)", "center", 10.5);
+
+    // Faixa do céu: longitude aparente de Marte (λ crescente → leste)
+    const y0 = oh + 6, sw = w - 24;
+    ctx.fillStyle = "rgba(13,19,32,0.9)"; ctx.fillRect(12, y0, sw, strip - 12);
+    ctx.strokeStyle = "#1f2b42"; ctx.strokeRect(12.5, y0 + 0.5, sw - 1, strip - 13);
+    const LX = (l) => 12 + ((l + TAU) % TAU) / TAU * sw;
+    for (let d = 0; d < 360; d += 30) {
+      ctx.fillStyle = "rgba(148,162,187,0.35)"; ctx.fillRect(LX(d * Math.PI / 180), y0 + strip - 22, 1, 6);
+    }
+    s.sky.forEach((q, i) => {
+      ctx.globalAlpha = 0.15 + 0.85 * i / s.sky.length;
+      ctx.fillStyle = q[1] ? "#ff6b6b" : "#f2b56b";
+      ctx.beginPath(); ctx.arc(LX(q[0]), y0 + 22, 1.6, 0, TAU); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    sphere(ctx, LX(ang), y0 + 22, 4.5, s.retro ? "#ff5a4a" : "#e0603a");
+    label(ctx, "Céu visto da Terra (longitude de Marte) · leste →", 18, y0 + 9, "#94a2bb", "left", 10.5);
+
+    hud(ctx, [
+      { t: `Dia ${fmt(s.t, 0)}`, c: "#f2b56b", w: 700 },
+      s.retro ? { t: "◀ MOVIMENTO RETRÓGRADO", c: "#ff6b6b", w: 800 } : { t: "movimento direto ▶", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   GRUPO 2A — COPÉRNICO: círculos centrados no Sol
+   θ_planeta = θ0 + 2πt/T (T sideral real, em anos). Lua: T = 27,32 d em volta da Terra.
+   ===================================================================== */
+const PLANETS = [
+  { n: "Mercúrio", a: 0.387, T: 0.2408, c: "#b9b2a8", r: 3, f: 0.6 },
+  { n: "Vênus", a: 0.723, T: 0.6152, c: "#f3e0b5", r: 4.2, f: 2.4 },
+  { n: "Terra", a: 1.0, T: 1.0, c: "#3b82d6", r: 5, f: 4.0 },
+  { n: "Marte", a: 1.524, T: 1.8809, c: "#e0603a", r: 4, f: 3.6 },
+  { n: "Júpiter", a: 5.203, T: 11.862, c: "#e5c49a", r: 7.5, f: 1.2 },
+  { n: "Saturno", a: 9.537, T: 29.457, c: "#e8d39a", r: 6.5, f: 5.2 },
+];
+const helioAngle = (p, t) => p.f + TAU * t / p.T;
+
+const Copernico = {
+  seed: 31,
+  reset(s) { s.t = 0; s.sight = s.sight ?? true; },
+  controls(s) { return [{ type: "toggle", label: "Linha Terra → Marte", get: () => s.sight, set: (v) => { s.sight = v; } }]; },
+  update(s, dt) { s.t += dt * 0.1; }, // anos por segundo
+  draw(ctx, w, h, s) {
+    const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.46;
+    const rad = (a) => R * Math.sqrt(a / 9.537) * 0.97; // distâncias comprimidas
+    const pos = {};
+    for (const p of PLANETS) {
+      circle(ctx, cx, cy, rad(p.a), "rgba(148,170,210,0.22)", 1);
+      const th = helioAngle(p, s.t);
+      pos[p.n] = [cx + rad(p.a) * Math.cos(th), cy - rad(p.a) * Math.sin(th)];
+    }
+    if (s.sight) {
+      const E = pos["Terra"], M = pos["Marte"], a = Math.atan2(M[1] - E[1], M[0] - E[0]);
+      ctx.strokeStyle = "rgba(255,120,100,0.45)"; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(E[0], E[1]); ctx.lineTo(E[0] + Math.cos(a) * 2000, E[1] + Math.sin(a) * 2000); ctx.stroke(); ctx.setLineDash([]);
+    }
+    sun(ctx, cx, cy, Math.max(6, R * 0.03));
+    for (const p of PLANETS) {
+      const [x, y] = pos[p.n];
+      if (p.n === "Terra") earth(ctx, x, y, p.r); else sphere(ctx, x, y, p.r, p.c, 1.8);
+      if (p.n === "Saturno") { ctx.strokeStyle = "rgba(232,211,154,0.8)"; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.ellipse(x, y, p.r * 1.9, p.r * 0.6, -0.4, 0, TAU); ctx.stroke(); }
+      label(ctx, p.n, x + p.r + 4, y - p.r - 3, "#e8eef9", "left", 11);
+    }
+    // Lua em volta da Terra (distância exagerada)
+    const E = pos["Terra"], thm = TAU * s.t / (27.32 / 365.25), rm = 13;
+    circle(ctx, E[0], E[1], rm, "rgba(220,220,220,0.18)", 1);
+    sphere(ctx, E[0] + rm * Math.cos(thm), E[1] - rm * Math.sin(thm), 2.2, "#d9d6cf");
+    hud(ctx, [
+      { t: `Ano ${fmt(s.t, 2)}`, c: "#f2b56b", w: 700 },
+      { t: "distâncias comprimidas · períodos reais", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   GRUPO 2B — TYCHO BRAHE: Terra fixa; Sol gira em volta da Terra;
+   planetas giram em volta do Sol.  P = S(t) + a·(cos θp, sen θp)
+   Com S(t) = −(posição heliocêntrica da Terra): mesma geometria de Copérnico.
+   ===================================================================== */
+const Tycho = {
+  seed: 37,
+  reset(s) { s.t = 0; s.trail = []; s.last = -1; s.showTrail = s.showTrail ?? true; },
+  controls(s) { return [{ type: "toggle", label: "Rastro de Marte", get: () => s.showTrail, set: (v) => { s.showTrail = v; } }]; },
+  sunPos(t) { const e = PLANETS[2], th = helioAngle(e, t) + Math.PI; return [Math.cos(th), Math.sin(th)]; },
+  update(s, dt) {
+    s.t += dt * 0.12;
+    if (s.t - s.last > 0.006) {
+      s.last = s.t;
+      const S = this.sunPos(s.t), m = PLANETS[3], th = helioAngle(m, s.t);
+      s.trail.push([S[0] + m.a * Math.cos(th), S[1] + m.a * Math.sin(th)]);
+      if (s.trail.length > 700) s.trail.shift();
+    }
+  },
+  draw(ctx, w, h, s) {
+    const cx = w / 2, cy = h / 2, k = Math.min(w, h) * 0.47 / 2.6; // escala linear: 1 UA = k px
+    const S = this.sunPos(s.t), sx = cx + S[0] * k, sy = cy - S[1] * k;
+    circle(ctx, cx, cy, k, "rgba(255,207,90,0.45)", 1.3, [5, 5]); // órbita do Sol em volta da Terra
+    if (s.showTrail) drawTrail(ctx, s.trail.map((q) => [cx + q[0] * k, cy - q[1] * k]), "rgba(224,96,58,0.85)", 1.3);
+    const inner = [PLANETS[0], PLANETS[1], PLANETS[3]];
+    for (const p of inner) circle(ctx, sx, sy, p.a * k, p.n === "Marte" ? "rgba(224,96,58,0.45)" : "rgba(148,170,210,0.3)", 1, [3, 4]);
+    // Lua em volta da Terra (distância exagerada)
+    const thm = TAU * s.t / (27.32 / 365.25), rm = 15;
+    circle(ctx, cx, cy, rm, "rgba(220,220,220,0.18)", 1);
+    earth(ctx, cx, cy, 8);
+    sphere(ctx, cx + rm * Math.cos(thm), cy - rm * Math.sin(thm), 2.3, "#d9d6cf");
+    sun(ctx, sx, sy, 8);
+    label(ctx, "Sol", sx + 11, sy - 11, "#ffd98a", "left", 11.5);
+    for (const p of inner) {
+      const th = helioAngle(p, s.t), x = sx + p.a * k * Math.cos(th), y = sy - p.a * k * Math.sin(th);
+      sphere(ctx, x, y, p.r, p.c, 1.8);
+      label(ctx, p.n, x + p.r + 4, y - p.r - 3, "#e8eef9", "left", 11);
+    }
+    label(ctx, "Terra (imóvel)", cx, cy + 22, "#9fd0ff", "center", 11);
+    hud(ctx, [
+      { t: `Ano ${fmt(s.t, 2)}`, c: "#f2b56b", w: 700 },
+      { t: "escala real · Júpiter e Saturno fora da tela", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   GRUPO 3A — GALILEU: luas de Júpiter vistas pela luneta
+   θ = θ0 + 2πt/T ; posição aparente x = a·cos θ ; profundidade z = a·sen θ (z>0: na frente)
+   ===================================================================== */
+const Galileu = {
+  seed: 41,
+  moons: [
+    { n: "Io", s: "I", T: 1.769, a: 5.905, c: "#f2d36b", f: 0.4 },
+    { n: "Europa", s: "E", T: 3.551, a: 9.397, c: "#e4d6bd", f: 2.3 },
+    { n: "Ganimedes", s: "G", T: 7.155, a: 14.99, c: "#c9c0b2", f: 4.1 },
+    { n: "Calisto", s: "C", T: 16.689, a: 26.37, c: "#a39888", f: 5.4 },
+  ],
+  reset(s) { s.t = 0; s.top = s.top || false; s.log = []; s.lastNight = -1; this.record(s); },
+  controls(s) { return [{ type: "toggle", label: "Vista de cima", get: () => s.top, set: (v) => { s.top = v; } }]; },
+  record(s) { // registra a configuração de uma "noite", como no caderno de Galileu
+    s.lastNight = Math.floor(s.t);
+    s.log.push({ night: s.lastNight + 1, m: this.moons.map((m) => { const th = m.f + TAU * s.t / m.T; return { x: m.a * Math.cos(th), z: m.a * Math.sin(th) }; }) });
+    if (s.log.length > 5) s.log.shift();
+  },
+  update(s, dt) { s.t += dt * 0.6; if (Math.floor(s.t) > s.lastNight) this.record(s); }, // dias por segundo
+  jupiter(ctx, x, y, r) {
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
+    ctx.fillStyle = "#e8d2ad"; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+    const bands = [[-0.55, 0.16, "#b98a5c"], [-0.2, 0.14, "#c99d70"], [0.18, 0.18, "#a9774c"], [0.55, 0.12, "#c79a6a"]];
+    for (const [o, t, c] of bands) { ctx.fillStyle = c; ctx.fillRect(x - r, y + o * r, 2 * r, t * r); }
+    const sh = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    sh.addColorStop(0, "rgba(255,255,255,0.25)"); sh.addColorStop(0.7, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,0.55)");
+    ctx.fillStyle = sh; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+    ctx.restore();
+  },
+  draw(ctx, w, h, s) {
+    const top = h * 0.66, cx = w / 2, cy = top / 2;
+    const F = Math.min(w * 0.47, top * 0.47);  // raio do campo de visão
+    const k = F / 28.5;                        // pixels por raio de Júpiter (escala real)
+    const now = this.moons.map((m) => { const th = m.f + TAU * s.t / m.T; return { m, x: m.a * Math.cos(th), z: m.a * Math.sin(th) }; });
+
+    if (!s.top) {
+      // ----- Vista pela luneta -----
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, F, 0, TAU); ctx.clip();
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, F);
+      g.addColorStop(0, "#0b1222"); g.addColorStop(1, "#03050a");
+      ctx.fillStyle = g; ctx.fillRect(cx - F, cy - F, 2 * F, 2 * F);
+      const draws = now.slice().sort((a, b) => a.z - b.z); // de trás para frente
+      for (const d of draws) if (d.z < 0) this.moonDot(ctx, cx + d.x * k, cy, d);
+      this.jupiter(ctx, cx, cy, k);
+      for (const d of draws) if (d.z >= 0) this.moonDot(ctx, cx + d.x * k, cy, d);
+      const vg = ctx.createRadialGradient(cx, cy, F * 0.75, cx, cy, F);
+      vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.75)");
+      ctx.fillStyle = vg; ctx.fillRect(cx - F, cy - F, 2 * F, 2 * F);
+      ctx.restore();
+      circle(ctx, cx, cy, F, "#3a4a66", 3);
+      circle(ctx, cx, cy, F + 4, "#151d2e", 4);
+      label(ctx, "visão da luneta", cx, cy + F - 14, "#7f8fab", "center", 10.5);
+    } else {
+      // ----- Vista de cima: as órbitas (para baixo = direção da Terra) -----
+      const kt = Math.min(w * 0.47, top * 0.47) / 28;
+      for (const d of now) circle(ctx, cx, cy, d.m.a * kt, "rgba(148,170,210,0.3)", 1);
+      this.jupiter(ctx, cx, cy, Math.max(3, kt));
+      for (const d of now) {
+        const x = cx + d.x * kt, y = cy + d.z * kt;
+        sphere(ctx, x, y, 3, d.m.c, 2);
+        label(ctx, d.m.n, x + 6, y - 6, "#e8eef9", "left", 10.5);
+      }
+      arrow(ctx, w - 30, cy - 24, w - 30, cy + 24, "rgba(108,196,255,0.8)", 1.6, 7);
+      label(ctx, "Terra", w - 30, cy + 36, "#9fd0ff", "center", 10.5);
+    }
+
+    // ----- Caderno de observações (uma linha por noite) -----
+    const y0 = top + 4, rowH = (h - y0 - 8) / 5;
+    ctx.fillStyle = "rgba(242,232,210,0.06)"; ctx.fillRect(12, y0, w - 24, h - y0 - 6);
+    label(ctx, "Caderno de Galileu", 20, y0 + 10, "#f2b56b", "left", 11, 700);
+    s.log.forEach((row, i) => {
+      const yy = y0 + 14 + rowH * (i + 0.6);
+      label(ctx, `Noite ${row.night}`, 20, yy, "#c9b99a", "left", 10.5);
+      const kx = (w - 120) / 2 / 28.5, x0 = 70 + (w - 70 - 20) / 2;
+      ctx.strokeStyle = "rgba(201,185,154,0.5)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x0, yy, 4, 0, TAU); ctx.stroke();
+      row.m.forEach((m, j) => {
+        if (m.z < 0 && Math.abs(m.x) < 1) return; // escondida atrás de Júpiter
+        label(ctx, "✶", x0 + m.x * kx, yy, "#e9dcc0", "center", 11);
+      });
+    });
+    hud(ctx, [{ t: `Dia ${fmt(s.t, 1)}`, c: "#f2b56b", w: 700 }, { t: "Io · Europa · Ganimedes · Calisto", c: "#94a2bb" }]);
+  },
+  moonDot(ctx, x, y, d) {
+    if (d.z < 0 && Math.abs(d.x) < 1) return; // ocultada por Júpiter
+    sphere(ctx, x, y, 2.4, d.m.c, 2.6);
+    label(ctx, d.m.s, x, y + 12, "#9fb0cc", "center", 10);
+  },
+};
+
+/* =====================================================================
+   GRUPO 3B — KEPLER: 1ª lei (elipse) e 2ª lei (áreas iguais)
+   M = 2πt/T ; resolve M = E − e·sen E ; x = a(cos E − e), y = b·sen E (Sol na origem)
+   dE/dt = n / (1 − e·cos E)  → velocidade orbital
+   ===================================================================== */
+const Kepler = {
+  seed: 43,
+  reset(s) { s.M = 0; s.e = s.e ?? 0.6; s.areas = s.areas ?? true; },
+  controls(s, v) {
+    return [
+      { type: "range", label: "Excentricidade", min: 0, max: 0.9, step: 0.01, value: s.e, input: (x) => { s.e = x; }, fmt: (x) => fmt(x, 2) },
+      { type: "toggle", label: "Áreas iguais", get: () => s.areas, set: (x) => { s.areas = x; } },
+    ];
+  },
+  update(s, dt) { s.M += TAU * dt / 8; }, // período de 8 s
+  draw(ctx, w, h, s) {
+    const e = s.e, sq = Math.sqrt(1 - e * e);
+    const a = Math.min(w * 0.4, h * 0.38 / sq), b = a * sq;
+    const cx = w / 2, cy = h / 2 + 6, sx = cx + a * e, sy = cy; // Sol no foco direito
+    const P = (E) => [sx + a * (Math.cos(E) - e), sy - b * Math.sin(E)];
+
+    if (s.areas) { // 12 fatias, cada uma percorrida em T/12
+      const Mcur = ((s.M % TAU) + TAU) % TAU, cur = Math.floor(Mcur / (TAU / 12));
+      for (let i = 0; i < 12; i++) {
+        ctx.beginPath(); ctx.moveTo(sx, sy);
+        for (let j = 0; j <= 20; j++) { const q = P(solveKepler((i + j / 20) * TAU / 12, e)); ctx.lineTo(q[0], q[1]); }
+        ctx.closePath();
+        const base = i % 2 ? "108,196,255" : "242,181,107";
+        ctx.fillStyle = `rgba(${base},${i === cur ? 0.38 : 0.12})`; ctx.fill();
+      }
+    }
+    ctx.strokeStyle = "rgba(220,230,250,0.75)"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(cx, cy, a, b, 0, 0, TAU); ctx.stroke();
+    // Focos e eixo maior
+    ctx.strokeStyle = "rgba(148,162,187,0.25)"; ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.moveTo(cx - a, cy); ctx.lineTo(cx + a, cy); ctx.stroke(); ctx.setLineDash([]);
+    label(ctx, "+", cx - a * e, cy, "#94a2bb", "center", 14);
+    if (e > 0.05) label(ctx, "foco vazio", cx - a * e, cy + 14, "#94a2bb", "center", 10);
+
+    const E = solveKepler(s.M, e), pl = P(E);
+    const n = TAU / 8, dE = n / (1 - e * Math.cos(E));
+    const vx = -a * Math.sin(E) * dE, vy = -b * Math.cos(E) * dE; // derivada na tela (y para baixo)
+    const v = Math.hypot(vx, vy), vPeri = a * n * Math.sqrt((1 + e) / (1 - e)) ;
+    ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(pl[0], pl[1]); ctx.stroke();
+    sun(ctx, sx, sy, 9);
+    sphere(ctx, pl[0], pl[1], 6, "#4f9be8", 2);
+    const L = 0.32 * v / n; // vetor velocidade em escala
+    arrow(ctx, pl[0], pl[1], pl[0] + vx / v * L * 0.9, pl[1] + vy / v * L * 0.9, "#7CFFB2", 2.2, 9);
+
+    label(ctx, "periélio", cx + a + 6, cy - 12, "#ffd98a", "left", 11);
+    label(ctx, "afélio", cx - a - 6, cy - 12, "#9fd0ff", "right", 11);
+    const r = Math.hypot(pl[0] - sx, pl[1] - sy) / a;
+    // barra de velocidade
+    const bw = Math.min(140, w * 0.3), frac = v / vPeri;
+    hud(ctx, [
+      { t: `distância ao Sol: ${fmt(r, 2)} a`, c: "#dfe6f3" },
+      { t: `velocidade: ${fmt(frac * 100, 0)}% da máxima`, c: "#7CFFB2" },
+    ]);
+    ctx.fillStyle = "rgba(255,255,255,0.1)"; ctx.fillRect(12, 46, bw, 6);
+    ctx.fillStyle = "#7CFFB2"; ctx.fillRect(12, 46, bw * frac, 6);
+    if (s.areas) label(ctx, "cada fatia = mesmo tempo (T/12)", w - 12, h - 14, "#94a2bb", "right", 10.5);
+  },
+};
+
+/* =====================================================================
+   GRUPO 4A — NEWTON: canhão no alto da montanha
+   a = −GM·r/|r|³ (GM = 1, raio da Terra = 1). Integração de Verlet com passo fixo.
+   v_circular = √(GM/r0) ; v_escape = √2·v_circular
+   ===================================================================== */
+const Newton = {
+  seed: 47,
+  R: 1, r0: 1.14, GM: 1, colors: ["#f2b56b", "#6cc4ff", "#7CFFB2", "#ff8fb1", "#c6a2ff", "#ffe066"],
+  reset(s) {
+    s.k = s.k ?? 0.7; s.shots = []; s.n = 0;
+    s.queue = [0.6, 0.85, 1.0]; // demonstração inicial: cada vez mais rápido até entrar em órbita
+    this.fire(s, s.queue.shift());
+  },
+  fire(s, kk = s.k) {
+    const v = kk * Math.sqrt(this.GM / this.r0);
+    s.shots.push({ x: 0, y: this.r0, vx: v, vy: 0, pts: [[0, this.r0]], st: "voando", k: kk, c: this.colors[s.n++ % this.colors.length], ang: 0, prev: Math.PI / 2, step: 0 });
+    if (s.shots.length > 6) s.shots.shift();
+  },
+  controls(s, view) {
+    const set = (k) => () => { s.queue = []; s.k = k; view.syncRanges(); this.fire(s); view.play(true); };
+    return [
+      { type: "range", label: "v / v_circular", min: 0.3, max: 1.5, step: 0.01, value: s.k, input: (x) => { s.k = x; }, fmt: (x) => fmt(x, 2), key: "k" },
+      { type: "button", label: "Disparar", action: () => { s.queue = []; this.fire(s); view.play(true); } },
+      { type: "button", label: "Cai perto", action: set(0.55) },
+      { type: "button", label: "Órbita circular", action: set(1.0) },
+      { type: "button", label: "Elíptica", action: set(1.15) },
+      { type: "button", label: "Escapa", action: set(1.45) },
+    ];
+  },
+  acc(x, y) { const r2 = x * x + y * y, r = Math.sqrt(r2), f = -this.GM / (r2 * r); return [f * x, f * y]; },
+  update(s, dt) {
+    const lastShot = s.shots[s.shots.length - 1];
+    if (s.queue.length && lastShot && lastShot.st !== "voando") this.fire(s, s.queue.shift());
+    const h = 0.002, steps = Math.round(dt * 1.3 / h);
+    for (const b of s.shots) {
+      if (b.st === "caiu" || b.st === "escapou") continue;
+      for (let i = 0; i < steps; i++) {
+        // Velocity Verlet: x += v·h + a·h²/2 ; v += (a_old + a_new)·h/2
+        const [ax, ay] = this.acc(b.x, b.y);
+        b.x += b.vx * h + 0.5 * ax * h * h; b.y += b.vy * h + 0.5 * ay * h * h;
+        const [bx, by] = this.acc(b.x, b.y);
+        b.vx += 0.5 * (ax + bx) * h; b.vy += 0.5 * (ay + by) * h;
+        const r = Math.hypot(b.x, b.y), th = Math.atan2(b.y, b.x);
+        b.ang += Math.abs(wrapPi(th - b.prev)); b.prev = th;
+        if (r <= this.R) { const u = 1 / r; b.x *= u; b.y *= u; b.st = "caiu"; b.pts.push([b.x, b.y]); break; }
+        if (r > 7) { b.st = "escapou"; break; }
+        if (b.ang > TAU && b.st === "voando") b.st = "em órbita";
+        if (++b.step % 6 === 0) { b.pts.push([b.x, b.y]); if (b.pts.length > 1400) b.pts.shift(); }
+      }
+    }
+  },
+  draw(ctx, w, h, s) {
+    const cx = w / 2, cy = h / 2 + 8, k = Math.min(w, h) * 0.47 / 2.55;
+    const X = (x) => cx + x * k, Y = (y) => cy - y * k;
+    // Atmosfera e Terra
+    const at = ctx.createRadialGradient(cx, cy, k * 0.95, cx, cy, k * 1.12);
+    at.addColorStop(0, "rgba(108,196,255,0.35)"); at.addColorStop(1, "rgba(108,196,255,0)");
+    ctx.fillStyle = at; ctx.beginPath(); ctx.arc(cx, cy, k * 1.12, 0, TAU); ctx.fill();
+    earth(ctx, cx, cy, k, 1.08);
+    // Montanha (exagerada) e canhão
+    const hw = 0.11;
+    ctx.fillStyle = "#6b5a49";
+    ctx.beginPath(); ctx.moveTo(X(Math.cos(Math.PI / 2 + hw)), Y(Math.sin(Math.PI / 2 + hw)));
+    ctx.lineTo(X(0), Y(this.r0 - 0.01)); ctx.lineTo(X(Math.cos(Math.PI / 2 - hw)), Y(Math.sin(Math.PI / 2 - hw))); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#2b2f38"; ctx.fillRect(X(0) - 3, Y(this.r0) - 4, 14, 6);
+
+    for (const b of s.shots) {
+      drawTrail(ctx, b.pts.map((p) => [X(p[0]), Y(p[1])]), b.c, 1.8);
+      const bx = X(b.x), by = Y(b.y);
+      sphere(ctx, bx, by, 3.6, b.c);
+      if (b.st === "caiu") label(ctx, "✕", bx, by, "#ff6b6b", "center", 12, 800);
+    }
+    // Vetor da força gravitacional na bala mais recente (∝ 1/r²)
+    const last = s.shots[s.shots.length - 1];
+    if (last && last.st !== "caiu" && last.st !== "escapou") {
+      const r = Math.hypot(last.x, last.y), L = 34 / (r * r);
+      arrow(ctx, X(last.x), Y(last.y), X(last.x) - last.x / r * L, Y(last.y) + last.y / r * L, "#ff6b6b", 2, 8);
+    }
+    const kms = ((last ? last.k : s.k) * 7.91 / Math.sqrt(this.r0));
+    hud(ctx, [
+      { t: `v = ${fmt(last ? last.k : s.k, 2)} × v_circular  (≈ ${fmt(kms, 1)} km/s)`, c: "#f2b56b", w: 700 },
+      { t: last ? `último disparo: ${last.st}` : "", c: last && last.st === "caiu" ? "#ff8a8a" : last && last.st === "escapou" ? "#c6a2ff" : "#7CFFB2" },
+      { t: "seta vermelha: força da gravidade", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   GRUPO 4B — HALLEY: órbita muito excêntrica e cauda anti-solar
+   a = 17,87 UA ; e = 0,967 ; T = a^1,5 = 75,5 anos (3ª lei de Kepler em UA/anos)
+   Kepler: M = 2πt/T → E → r. Velocidade (vis-viva): v = √(GM(2/r − 1/a)), GM☉ = 4π² UA³/ano²
+   Órbita retrógrada: desenhada no sentido horário. Cauda de íons: direção Sol → cometa.
+   ===================================================================== */
+const Halley = {
+  seed: 53,
+  a: 17.87, e: 0.967,
+  planets: [
+    ["Mercúrio", 0.387, 0.2408, "#b9b2a8"], ["Vênus", 0.723, 0.6152, "#f3e0b5"], ["Terra", 1, 1, "#4f9be8"],
+    ["Marte", 1.524, 1.881, "#e0603a"], ["Júpiter", 5.203, 11.86, "#e5c49a"], ["Saturno", 9.537, 29.46, "#e8d39a"],
+    ["Urano", 19.19, 84.01, "#9fe3ea"], ["Netuno", 30.07, 164.8, "#5b7cf0"],
+  ],
+  reset(s) { s.t = -2.5; s.cycles = 0; s.zoom = s.zoom ?? true; s.field = 6; s.slow = false; },
+  controls(s) { return [{ type: "toggle", label: "Zoom automático", get: () => s.zoom, set: (v) => { s.zoom = v; } }]; },
+  state(t) {
+    const T = Math.pow(this.a, 1.5), b = this.a * Math.sqrt(1 - this.e * this.e);
+    const E = solveKepler(TAU * t / T, this.e);
+    const x = this.a * (Math.cos(E) - this.e), y = -b * Math.sin(E); // sinal − → sentido horário (retrógrado)
+    const r = Math.hypot(x, y);
+    const v = Math.sqrt(4 * Math.PI * Math.PI * (2 / r - 1 / this.a)); // UA/ano
+    const dE = (TAU / T) / (1 - this.e * Math.cos(E));
+    return { x, y, r, v, vx: -this.a * Math.sin(E) * dE, vy: -b * Math.cos(E) * dE, T };
+  },
+  update(s, dt) {
+    const c = this.state(s.t);
+    // "Câmera lenta" perto do Sol para que a passagem pelo periélio seja visível
+    const rate = 2.2 * clamp(c.r / 8, 0.02, 1);
+    s.slow = rate < 1.5;
+    s.t += dt * rate;
+    const target = s.zoom ? clamp(c.r * 1.3 + 1.2, 2.4, 37) : 37;
+    s.field = lerp(s.field, target, 1 - Math.exp(-dt * 2.5));
+    if (s.t > c.T - 2.5) { s.t -= c.T; s.cycles++; }
+  },
+  draw(ctx, w, h, s) {
+    const c = this.state(s.t);
+    const cx = w / 2, cy = h / 2, k = Math.min(w, h) * 0.47 / s.field; // px por UA
+    const X = (x) => cx + x * k, Y = (y) => cy - y * k;
+    // Órbitas e planetas (sentido anti-horário)
+    for (const [n, a, T, col] of this.planets) {
+      if (a * k < 2) continue;
+      circle(ctx, cx, cy, a * k, "rgba(148,170,210,0.22)", 1);
+      const th = 1.3 * a + TAU * (s.t + s.cycles * c.T) / T;
+      const px = X(a * Math.cos(th)), py = Y(a * Math.sin(th));
+      sphere(ctx, px, py, n === "Júpiter" || n === "Saturno" ? 4 : 2.8, col);
+      if (a * k > 22) label(ctx, n, px + 6, py - 6, "#b7c4dc", "left", 10.5);
+    }
+    // Órbita do cometa
+    const b = this.a * Math.sqrt(1 - this.e * this.e);
+    ctx.strokeStyle = "rgba(108,196,255,0.45)"; ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.ellipse(X(-this.a * this.e), cy, this.a * k, b * k, 0, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+
+    sun(ctx, cx, cy, clamp(0.06 * k, 4, 13));
+    const px = X(c.x), py = Y(c.y);
+    // Linha Sol → cometa
+    ctx.strokeStyle = "rgba(255,217,138,0.25)"; ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke(); ctx.setLineDash([]);
+
+    // Caudas: atividade cresce perto do Sol, some além de ~5 UA (o gelo só sublima perto do Sol)
+    const act = clamp((5 - c.r) / 2.5, 0, 1);
+    const ux = c.x / c.r, uy = c.y / c.r;                       // direção anti-solar
+    const vn = Math.hypot(c.vx, c.vy), wx = -c.vx / vn, wy = -c.vy / vn; // oposta à velocidade
+    const Lion = act * Math.min(1.6, 1.2 / c.r) * k; // comprimento (UA → px), cresce perto do Sol
+    if (act > 0) {
+      // Cauda de poeira: levemente curvada para trás da órbita
+      const dx = ux * 0.75 + wx * 0.45, dy = uy * 0.75 + wy * 0.45, dn = Math.hypot(dx, dy);
+      const g2 = ctx.createLinearGradient(px, py, px + dx / dn * Lion * 0.85, py - dy / dn * Lion * 0.85);
+      g2.addColorStop(0, "rgba(255,226,160,0.55)"); g2.addColorStop(1, "rgba(255,226,160,0)");
+      ctx.strokeStyle = g2; ctx.lineWidth = 7; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(px, py);
+      ctx.quadraticCurveTo(px + ux * Lion * 0.5, py - uy * Lion * 0.5, px + dx / dn * Lion * 0.85, py - dy / dn * Lion * 0.85); ctx.stroke();
+      // Cauda de íons: reta, exatamente na direção oposta ao Sol
+      const g = ctx.createLinearGradient(px, py, px + ux * Lion, py - uy * Lion);
+      g.addColorStop(0, "rgba(140,210,255,0.95)"); g.addColorStop(1, "rgba(140,210,255,0)");
+      ctx.strokeStyle = g; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + ux * Lion, py - uy * Lion); ctx.stroke();
+      if (Lion > 40) {
+        const mx = cx + (px - cx) * 0.45, my = cy + (py - cy) * 0.45;
+        arrow(ctx, mx - ux * 14, my + uy * 14, mx + ux * 14, my - uy * 14, "rgba(255,217,138,0.85)", 1.6, 7);
+        label(ctx, "vento solar", mx + uy * 14, my + ux * 14, "#ffd98a", "center", 10.5);
+      }
+    }
+    const coma = ctx.createRadialGradient(px, py, 0, px, py, 4 + 10 * act);
+    coma.addColorStop(0, "rgba(220,240,255,1)"); coma.addColorStop(1, "rgba(160,210,255,0)");
+    ctx.fillStyle = coma; ctx.beginPath(); ctx.arc(px, py, 4 + 10 * act, 0, TAU); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(px, py, 2, 0, TAU); ctx.fill();
+    label(ctx, "Halley", px + 8, py + 12, "#cfe9ff", "left", 11);
+
+    const year = 1986.1 + s.t + s.cycles * c.T;
+    hud(ctx, [
+      { t: `Ano ${Math.floor(year)}`, c: "#f2b56b", w: 700 },
+      { t: `distância ao Sol: ${fmt(c.r, 2)} UA`, c: "#dfe6f3" },
+      { t: `velocidade: ${fmt(c.v * 4.7404, 1)} km/s`, c: "#7CFFB2" },
+      s.slow ? { t: "câmera lenta perto do Sol", c: "#94a2bb" } : { t: "", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   GRUPO 5A — EINSTEIN: espaço-tempo curvo
+   Grade (analogia do lençol): z(r) = −k·M/√(r² + s²)
+   Órbita: a = −(GM/r²)·(1 + ε·L²/r²) r̂  — o termo ε = 3/c² (exagerado) dá a
+   precessão do periélio: Δφ ≈ 2π·ε·(GM)²/L² por volta.
+   Projeção 3D → 2D: rotação de azimute, inclinação da câmera e perspectiva.
+   ===================================================================== */
+const Einstein = {
+  seed: 59,
+  reset(s) {
+    s.mass = s.mass ?? 1; s.prec = s.prec ?? true; s.rot = s.rot ?? true; s.az = s.az ?? 0.5;
+    const ra = 1.7, e = 0.35; // começa no afélio com velocidade de uma elipse e = 0,35
+    s.x = ra; s.y = 0; s.vx = 0; s.vy = Math.sqrt(s.mass * (1 - e) / ra);
+    s.trail = []; s.cnt = 0; s.r1 = ra; s.r2 = ra; s.peri = null; s.dPeri = null;
+  },
+  controls(s, view) {
+    return [
+      { type: "range", label: "Massa do Sol", min: 0.4, max: 1.8, step: 0.05, value: s.mass, input: (x) => { s.mass = x; }, fmt: (x) => fmt(x, 2) + "×" },
+      { type: "toggle", label: "Efeito relativístico", get: () => s.prec, set: (x) => { s.prec = x; s.peri = null; s.dPeri = null; } },
+      { type: "toggle", label: "Girar câmera", get: () => s.rot, set: (x) => { s.rot = x; } },
+    ];
+  },
+  acc(s, x, y) {
+    const r2 = x * x + y * y, r = Math.sqrt(r2), GM = s.mass;
+    const L = x * s.vy - y * s.vx;                         // momento angular por massa
+    const f = -GM / (r2 * r) * (1 + (s.prec ? 0.08 * L * L / r2 : 0));
+    return [f * x, f * y];
+  },
+  update(s, dt, view) {
+    if (s.rot) s.az += dt * 0.15;
+    const h = 0.002, steps = Math.round(dt * 1.6 / h);
+    for (let i = 0; i < steps; i++) {
+      const [ax, ay] = this.acc(s, s.x, s.y);
+      s.x += s.vx * h + 0.5 * ax * h * h; s.y += s.vy * h + 0.5 * ay * h * h;
+      const [bx, by] = this.acc(s, s.x, s.y);
+      s.vx += 0.5 * (ax + bx) * h; s.vy += 0.5 * (ay + by) * h;
+      const r = Math.hypot(s.x, s.y);
+      // detecta periélio (mínimo local de r) e mede quanto ele avançou
+      if (s.r1 < s.r2 && s.r1 < r) {
+        const ang = Math.atan2(s.y, s.x);
+        if (s.peri !== null) s.dPeri = wrapPi(ang - s.peri) * 180 / Math.PI;
+        s.peri = ang;
+      }
+      s.r2 = s.r1; s.r1 = r;
+      if (++s.cnt % 8 === 0) { s.trail.push([s.x, s.y]); if (s.trail.length > 1600) s.trail.shift(); }
+      if (r < 0.22 || r > 4.2) { this.reset(s); break; } // caiu no Sol ou escapou: recomeça a órbita
+    }
+  },
+  depth(s, x, y) { return -0.62 * s.mass / Math.sqrt(x * x + y * y + 0.22); },
+  draw(ctx, w, h, s) {
+    const cx = w / 2, cy = h * 0.5, sc = Math.min(w * 0.15, h * 0.19);
+    const el = 0.75, ca = Math.cos(s.az), sa = Math.sin(s.az), se = Math.sin(el), ce = Math.cos(el), f = 7;
+    // projeção: gira em torno de z (azimute), inclina a câmera (elevação) e aplica perspectiva
+    const proj = (x, y, z) => {
+      const xr = x * ca - y * sa, yr = x * sa + y * ca;
+      const up = yr * se + z * ce, dep = yr * ce - z * se;
+      const p = f / (f + dep);
+      return [cx + xr * sc * p, cy - up * sc * p, p];
+    };
+    const L = 3.3, N = 22, M = 50;
+    ctx.lineWidth = 1;
+    for (let dir = 0; dir < 2; dir++) {
+      for (let i = 0; i <= N; i++) {
+        const u = -L + 2 * L * i / N;
+        ctx.beginPath();
+        for (let j = 0; j <= M; j++) {
+          const v = -L + 2 * L * j / M;
+          const x = dir ? u : v, y = dir ? v : u;
+          const q = proj(x, y, this.depth(s, x, y));
+          j ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+        }
+        const edge = Math.abs(u) / L;
+        ctx.strokeStyle = `rgba(108,196,255,${0.5 - 0.3 * edge})`;
+        ctx.stroke();
+      }
+    }
+    // Rastro da órbita sobre a superfície
+    const tp = s.trail.map((p) => proj(p[0], p[1], this.depth(s, p[0], p[1]) + 0.02));
+    drawTrail(ctx, tp, "#f2b56b", 1.6);
+    const sp = proj(0, 0, this.depth(s, 0, 0) + 0.18);
+    sun(ctx, sp[0], sp[1], 13 * sp[2] * (0.8 + 0.25 * s.mass));
+    const pp = proj(s.x, s.y, this.depth(s, s.x, s.y) + 0.06);
+    sphere(ctx, pp[0], pp[1], 6 * pp[2], "#4f9be8", 2);
+
+    hud(ctx, [
+      { t: `Massa do Sol: ${fmt(s.mass, 2)}×`, c: "#f2b56b", w: 700 },
+      s.prec
+        ? { t: s.dPeri !== null ? `periélio avança ${fmt(Math.abs(s.dPeri), 1)}° por volta` : "medindo o avanço do periélio…", c: "#7CFFB2" }
+        : { t: "sem efeito relativístico: elipse fechada (Newton)", c: "#94a2bb" },
+    ]);
+    label(ctx, "grade = tecido do espaço-tempo (analogia)", w - 12, h - 14, "#94a2bb", "right", 10.5);
+  },
+};
+
+/* =====================================================================
+   GRUPO 5B — HUBBLE: expansão do universo
+   posição física = a(t)·posição comóvel ;  v = ȧ·x = (ȧ/a)·d = H·d  (lei de Hubble)
+   Expansão com ȧ constante (simples): H = ȧ/a diminui com o tempo.
+   ===================================================================== */
+const Hubble = {
+  seed: 61,
+  reset(s) {
+    if (!s.gal) {
+      const r = rng(2024); s.gal = [{ x: 0, y: 0, rot: 0.4, sz: 1.3 }];
+      while (s.gal.length < 85) {
+        const ang = r() * TAU, rad = 1.25 * Math.sqrt(r());
+        const g = { x: rad * Math.cos(ang), y: rad * Math.sin(ang), rot: r() * Math.PI, sz: 0.7 + r() * 0.7 };
+        if (s.gal.every((o) => Math.hypot(o.x - g.x, o.y - g.y) > 0.085)) s.gal.push(g);
+      }
+    }
+    s.a = 0.06; s.adot = 0.2; s.obs = s.obs ?? 0; s.flash = 1; s.grid = s.grid ?? true;
+  },
+  controls(s) {
+    return [
+      { type: "button", label: "Big Bang (recomeçar)", action: () => { s.a = 0.06; s.flash = 1; } },
+      { type: "toggle", label: "Grade do espaço", get: () => s.grid, set: (v) => { s.grid = v; } },
+      { type: "button", label: "Voltar à Via Láctea", action: () => { s.obs = 0; } },
+    ];
+  },
+  update(s, dt) {
+    s.a += s.adot * dt;               // a(t) cresce: o espaço se expande
+    s.flash = Math.max(0, s.flash - dt * 1.2);
+    if (s.a > 1.9) { s.a = 0.06; s.flash = 1; }
+  },
+  onClick(s, x, y, view) {
+    const { w, h } = view, sc = Math.min(w, h) * 0.42, o = s.gal[s.obs];
+    let best = -1, bd = 22;
+    s.gal.forEach((g, i) => {
+      const gx = w / 2 + s.a * (g.x - o.x) * sc, gy = h / 2 - s.a * (g.y - o.y) * sc;
+      const d = Math.hypot(gx - x, gy - y); if (d < bd) { bd = d; best = i; }
+    });
+    if (best >= 0) s.obs = best;
+  },
+  draw(ctx, w, h, s) {
+    const cx = w / 2, cy = h / 2, sc = Math.min(w, h) * 0.42, o = s.gal[s.obs];
+    const H = s.adot / s.a;
+    if (s.grid) { // grade comóvel: as linhas se afastam junto com as galáxias
+      ctx.strokeStyle = "rgba(108,196,255,0.08)"; ctx.lineWidth = 1;
+      for (let i = -12; i <= 12; i++) {
+        const gx = cx + s.a * (i * 0.25 - o.x) * sc, gy = cy - s.a * (i * 0.25 - o.y) * sc;
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+      }
+    }
+    const dref = Math.min(w, h) * 0.55, pts = [];
+    s.gal.forEach((g, i) => {
+      const dx = s.a * (g.x - o.x) * sc, dy = -s.a * (g.y - o.y) * sc;
+      const gx = cx + dx, gy = cy + dy, d = Math.hypot(dx, dy);
+      if (gx < -20 || gx > w + 20 || gy < -20 || gy > h + 20) return;
+      const f = clamp(d / dref, 0, 1);      // cor ∝ velocidade de afastamento (desvio para o vermelho)
+      const col = `rgb(${Math.round(lerp(190, 255, f))},${Math.round(lerp(215, 90, f))},${Math.round(lerp(255, 70, f))})`;
+      if (i !== s.obs && d > 4) {           // seta: deslocamento em 0,8 s = H·d·0,8
+        const L = H * d * 0.8;
+        arrow(ctx, gx, gy, gx + dx / d * L, gy + dy / d * L, col.replace("rgb", "rgba").replace(")", ",0.7)"), 1.2, 5);
+        pts.push([d, H * d, col]);
+      }
+      // galáxia: núcleo + disco (tamanho constante: galáxias não se expandem)
+      const gl = ctx.createRadialGradient(gx, gy, 0, gx, gy, 7 * g.sz);
+      gl.addColorStop(0, col); gl.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(gx, gy, 7 * g.sz, 0, TAU); ctx.fill();
+      ctx.save(); ctx.translate(gx, gy); ctx.rotate(g.rot);
+      ctx.fillStyle = col; ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.ellipse(0, 0, 3.6 * g.sz, 1.4 * g.sz, 0, 0, TAU); ctx.fill();
+      ctx.restore(); ctx.globalAlpha = 1;
+      if (i === s.obs) {
+        circle(ctx, gx, gy, 11, "#f2b56b", 1.6);
+        label(ctx, s.obs === 0 ? "Via Láctea (você)" : "observador", gx, gy - 20, "#f2b56b", "center", 11.5, 700);
+      }
+    });
+    // Diagrama de Hubble (velocidade × distância)
+    const bw = Math.min(170, w * 0.36), bh = bw * 0.62, bx = 12, by = h - bh - 12;
+    ctx.fillStyle = "rgba(10,15,26,0.85)"; ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = "#1f2b42"; ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+    const dmax = Math.hypot(w, h) * 0.5, vmax = H * dmax;
+    ctx.strokeStyle = "rgba(148,162,187,0.6)"; ctx.beginPath();
+    ctx.moveTo(bx + 18, by + 8); ctx.lineTo(bx + 18, by + bh - 16); ctx.lineTo(bx + bw - 8, by + bh - 16); ctx.stroke();
+    ctx.strokeStyle = "rgba(242,181,107,0.6)"; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(bx + 18, by + bh - 16); ctx.lineTo(bx + bw - 8, by + 8); ctx.stroke(); ctx.setLineDash([]);
+    for (const [d, v, col] of pts) {
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(bx + 18 + d / dmax * (bw - 26), by + bh - 16 - v / vmax * (bh - 24), 2, 0, TAU); ctx.fill();
+    }
+    label(ctx, "distância →", bx + bw - 8, by + bh - 7, "#94a2bb", "right", 9.5);
+    label(ctx, "v = H·d", bx + 24, by + 13, "#f2b56b", "left", 10.5, 700);
+
+    if (s.flash > 0) { ctx.fillStyle = `rgba(255,240,210,${s.flash * 0.6})`; ctx.fillRect(0, 0, w, h); }
+    hud(ctx, [
+      { t: `fator de escala a = ${fmt(s.a, 2)}`, c: "#f2b56b", w: 700 },
+      { t: `H = ȧ/a = ${fmt(H, 2)} (diminui com o tempo)`, c: "#dfe6f3" },
+      { t: "clique numa galáxia para observar dela", c: "#94a2bb" },
+    ]);
+  },
+};
+
+/* =====================================================================
+   Estrutura da interface: um "Viewer" por card (canvas + controles)
+   ===================================================================== */
+const MODELS = { aristoteles: Aristoteles, ptolomeu: Ptolomeu, copernico: Copernico, tycho: Tycho, galileu: Galileu, kepler: Kepler, newton: Newton, halley: Halley, einstein: Einstein, hubble: Hubble };
+
+class Viewer {
+  constructor(card) {
+    this.card = card;
+    this.model = MODELS[card.dataset.model];
+    this.canvas = card.querySelector("canvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.stage = card.querySelector(".stage");
+    this.s = {}; this.speed = 1; this.playing = true; this.w = 400; this.h = 300; this.dpr = 1; this.ranges = [];
+    this.model.reset(this.s, this);
+    this.buildControls();
+    new ResizeObserver(() => this.resize()).observe(this.stage);
+    this.resize();
+    if (this.model.onClick) {
+      this.canvas.style.cursor = "pointer";
+      this.canvas.addEventListener("pointerdown", (e) => {
+        const r = this.canvas.getBoundingClientRect();
+        this.model.onClick(this.s, e.clientX - r.left, e.clientY - r.top, this);
+      });
+    }
+  }
+  resize() {
+    const r = this.stage.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return;
+    this.w = r.width; this.h = r.height; this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.canvas.width = Math.round(this.w * this.dpr); this.canvas.height = Math.round(this.h * this.dpr);
+    this.bg = makeStarfield(this.w, this.h, this.dpr, this.model.seed || 1);
+  }
+  play(on) { this.playing = on; this.playBtn.textContent = on ? "❚❚ Pausar" : "▶ Continuar"; this.playBtn.setAttribute("aria-pressed", String(!on)); }
+  syncRanges() { for (const r of this.ranges) if (r.key) { r.input.value = this.s[r.key]; r.out.value = r.fmt(+r.input.value); } }
+  buildControls() {
+    const box = this.card.querySelector(".controls");
+    const btn = (text, cls = "ctl") => { const b = document.createElement("button"); b.className = cls; b.type = "button"; b.textContent = text; box.appendChild(b); return b; };
+    this.playBtn = btn("❚❚ Pausar", "ctl primary");
+    this.playBtn.addEventListener("click", () => this.play(!this.playing));
+    btn("↺ Reiniciar").addEventListener("click", () => { this.model.reset(this.s, this); this.syncRanges(); this.play(true); });
+    const addRange = (spec) => {
+      const lab = document.createElement("label"); lab.className = "rng";
+      const inp = document.createElement("input"); inp.type = "range"; inp.min = spec.min; inp.max = spec.max; inp.step = spec.step; inp.value = spec.value;
+      const out = document.createElement("output"); out.value = spec.fmt(+spec.value);
+      lab.append(spec.label, inp, out); box.appendChild(lab);
+      inp.addEventListener("input", () => { spec.input(+inp.value); out.value = spec.fmt(+inp.value); });
+      this.ranges.push({ input: inp, out, fmt: spec.fmt, key: spec.key });
+    };
+    addRange({ label: "Velocidade", min: 0.1, max: 4, step: 0.1, value: 1, input: (v) => { this.speed = v; }, fmt: (v) => fmt(v, 1) + "×" });
+    const extra = this.model.controls ? this.model.controls(this.s, this) : [];
+    for (const c of extra) {
+      if (c.type === "button") btn(c.label).addEventListener("click", c.action);
+      else if (c.type === "toggle") {
+        const b = btn(c.label); b.setAttribute("aria-pressed", String(c.get()));
+        b.addEventListener("click", () => { c.set(!c.get()); b.setAttribute("aria-pressed", String(c.get())); });
+      } else if (c.type === "range") addRange(c);
+    }
+  }
+  frame(dt) {
+    if (!this.bg) { this.resize(); if (!this.bg) return; } // aba recém-aberta: mede o canvas antes de desenhar
+    if (this.playing) this.model.update(this.s, dt * this.speed, this);
+    const c = this.ctx;
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    c.globalAlpha = 1; c.setLineDash([]);
+    c.drawImage(this.bg, 0, 0, this.w, this.h);
+    this.model.draw(c, this.w, this.h, this.s, this);
+  }
+}
+
+
+/* =====================================================================
+   Conteúdo das exposições (uma por cientista, em ordem cronológica)
+   ===================================================================== */
+const GROUPS = ["Terra no centro", "Sol no centro", "Telescópio e órbitas", "Gravidade", "Universo gigante"];
+const EXPOS = [
+  {
+    id: "aristoteles", g: 1, name: "Aristóteles", year: "c. 350 a.C.", dates: "384–322 a.C. · Grécia Antiga",
+    thesis: "A Terra está parada no centro de um universo feito de esferas perfeitas.",
+    ctx: "Filósofo grego, aluno de Platão e professor de Alexandre, o Grande. Escreveu sobre lógica, biologia, política e física. Suas ideias guiaram a ciência por quase 2.000 anos.",
+    prob: "Por que o Sol, a Lua e as estrelas parecem girar em volta de nós todos os dias? E do que o céu é feito?",
+    idea: [
+      "A Terra é esférica (nos eclipses, a sombra dela na Lua é sempre redonda) e fica imóvel no centro.",
+      "Cada astro está preso a uma esfera transparente que gira em movimento circular uniforme, considerado o movimento perfeito.",
+      "Há dois mundos: abaixo da Lua tudo muda (terra, água, ar e fogo); acima dela tudo é feito de éter, eterno e imutável.",
+    ],
+    observe: [
+      "Cada esfera gira num ritmo próprio: a Lua dá uma volta em 27 dias; Saturno leva quase 30 anos.",
+      "Ligue <b>Rotação diária</b>: todas as esferas giram juntas uma vez por dia. É o nascer e o pôr dos astros.",
+      "A Terra nunca se move; tudo gira em volta dela.",
+    ],
+    terms: [["Geocentrismo", "a Terra no centro do universo"], ["Éter", "o quinto elemento, do qual seriam feitos os céus"], ["Movimento circular uniforme", "em círculo e com velocidade constante"]],
+    next: "Os planetas às vezes parecem andar para trás entre as estrelas e mudam de brilho. Esferas que giram sempre igual não explicam isso.",
+    math: "Para cada astro: <code>θ(t) = θ₀ + 2πt / T</code> e posição <code>(R·cos θ, R·sen θ)</code>, com os períodos reais ao longo do zodíaco (Lua 27,3 d, Sol 1 ano, Marte 687 d, Júpiter 11,9 anos, Saturno 29,5 anos). Na rotação diária, soma-se <code>−2πt</code> (uma volta por dia, para oeste). Ordem das esferas segundo Platão e Aristóteles: Lua, Sol, Vênus, Mercúrio, Marte, Júpiter, Saturno.",
+  },
+  {
+    id: "ptolomeu", g: 1, name: "Ptolomeu", year: "c. 150 d.C.", dates: "c. 100–170 d.C. · Alexandria, Império Romano",
+    thesis: "Círculos girando sobre círculos explicam o vaivém dos planetas.",
+    ctx: "Astrônomo e geógrafo de Alexandria, no Egito, então parte do Império Romano. Reuniu séculos de observações no <i>Almagesto</i>, usado por mais de 1.400 anos. Também fez mapas com latitude e longitude.",
+    prob: "Observado noite após noite, Marte avança entre as estrelas, para, volta por algumas semanas e depois segue em frente. Como explicar isso com a Terra no centro e só com círculos?",
+    idea: [
+      "O planeta gira num círculo pequeno, o <b>epiciclo</b>.",
+      "O centro do epiciclo gira num círculo grande, o <b>deferente</b>, em volta da Terra.",
+      "Somando os dois giros, às vezes o planeta recua: é o <b>movimento retrógrado</b>. Nesses momentos ele fica mais perto da Terra, por isso brilha mais.",
+    ],
+    observe: [
+      "O rastro de Marte forma laços; os trechos em vermelho são o movimento retrógrado.",
+      "Na faixa de baixo, que mostra Marte visto da Terra, ele anda para a esquerda durante o laço.",
+      "O retrógrado sempre acontece quando Marte está do lado oposto ao Sol.",
+    ],
+    terms: [["Epiciclo", "círculo pequeno que o planeta percorre"], ["Deferente", "círculo grande que leva o epiciclo em volta da Terra"], ["Retrógrado", "quando o planeta parece andar para trás no céu"]],
+    next: "Para acertar as previsões, o modelo foi ganhando dezenas de círculos e ajustes, como o equante. Funcionava, mas ficava cada vez mais complicado.",
+    math: "<code>P(t) = R_d·(cos θ_d, sen θ_d) + r_e·(cos θ_e, sen θ_e)</code>, com <code>T_d = 687 dias</code>, <code>T_e = 1 ano</code> e <code>r_e/R_d = 1/1,52</code>. A faixa mostra a longitude vista da Terra, <code>λ = atan2(y, x)</code>; quando λ diminui, o movimento é retrógrado. Versão simplificada, sem o equante.",
+  },
+  {
+    id: "copernico", g: 2, name: "Copérnico", year: "1543", dates: "1473–1543 · Polônia, Renascimento",
+    thesis: "O Sol fica no centro, e a Terra é só mais um planeta.",
+    ctx: "Cônego da Igreja, médico e astrônomo polonês, na época do Renascimento e das Grandes Navegações. Publicou <i>Sobre as revoluções das esferas celestes</i> em 1543, o ano em que morreu.",
+    prob: "O sistema de Ptolomeu tinha ficado complicado demais. Haveria um arranjo mais simples e harmonioso para os mesmos movimentos?",
+    idea: [
+      "O Sol fica no centro. A Terra gira em volta dele em um ano e em volta de si mesma em um dia.",
+      "Quanto mais longe do Sol, mais lento o planeta. A ordem dos planetas aparece naturalmente.",
+      "O retrógrado vira ilusão: a Terra, mais rápida, ultrapassa Marte, como um carro que ultrapassa outro na estrada.",
+    ],
+    observe: [
+      "Siga a linha Terra → Marte: quando a Terra passa por Marte, a linha gira para trás. É o retrógrado.",
+      "Mercúrio dá cerca de 4 voltas enquanto a Terra dá uma.",
+      "A Lua continua girando em volta da Terra.",
+    ],
+    terms: [["Heliocentrismo", "o Sol no centro"], ["Órbita", "o caminho de um astro em volta de outro"], ["Período", "o tempo de uma volta completa"]],
+    next: "Copérnico manteve órbitas circulares e ainda precisou de epiciclos; suas previsões não eram muito melhores que as de Ptolomeu. E faltavam provas de que a Terra se move.",
+    math: "Círculos uniformes centrados no Sol, com os períodos siderais reais: Mercúrio 0,24 ano, Vênus 0,62, Terra 1, Marte 1,88, Júpiter 11,86, Saturno 29,46. As distâncias foram comprimidas (<code>r_tela ∝ √a</code>) para caber na tela.",
+  },
+  {
+    id: "tycho", g: 2, name: "Tycho Brahe", year: "1588", dates: "1546–1601 · Dinamarca",
+    thesis: "Medir o céu com precisão e propor um meio-termo entre Ptolomeu e Copérnico.",
+    ctx: "Nobre dinamarquês que perdeu parte do nariz num duelo. O rei lhe deu a ilha de Hven, onde construiu o observatório de Uraniborg. Sem telescópio, mediu posições dez vezes melhor que antes. Em 1572 viu uma supernova, e em 1577 mostrou que um cometa estava além da Lua: o céu “imutável” de Aristóteles mudava.",
+    prob: "Se a Terra girasse em volta do Sol, as estrelas deveriam mudar um pouco de posição ao longo do ano (paralaxe). Tycho não viu nenhuma mudança. E uma Terra pesada em movimento parecia absurda.",
+    idea: [
+      "A Terra fica parada no centro; a Lua e o Sol giram em volta dela.",
+      "Todos os outros planetas giram em volta do Sol e são levados junto com ele.",
+      "Visto da Terra, o modelo dá as mesmas posições que o de Copérnico. Por isso as observações da época não decidiam qual estava certo.",
+    ],
+    observe: [
+      "As órbitas dos planetas acompanham o Sol enquanto ele gira em volta da Terra.",
+      "A órbita de Marte cruza a órbita do Sol: as esferas sólidas não podem existir.",
+      "O rastro de Marte faz os mesmos laços do modelo de Ptolomeu.",
+    ],
+    terms: [["Paralaxe", "mudança aparente de posição quando o observador se move (só medida em 1838)"], ["Supernova", "explosão de uma estrela, vista como “estrela nova”"], ["Geo-heliocêntrico", "Terra no centro, planetas em volta do Sol"]],
+    next: "Os dados de Tycho sobre Marte eram tão precisos que nenhum modelo de círculos se encaixava neles. Seu assistente, Kepler, herdou o problema.",
+    math: "Planeta visto da Terra: <code>P(t) = S(t) + a·(cos θ_p, sen θ_p)</code>, onde <code>S(t)</code> é o Sol girando em volta da Terra (1 UA, 1 ano). É a mesma geometria de Copérnico vista a partir da Terra. Distâncias em escala real (Júpiter e Saturno ficam fora da tela).",
+  },
+  {
+    id: "galileu", g: 3, name: "Galileu", year: "1610", dates: "1564–1642 · Itália",
+    thesis: "Apontar uma luneta para o céu e trazer provas.",
+    ctx: "Professor em Pádua, soube em 1609 da luneta inventada na Holanda e construiu as suas, com aumento de cerca de 20 vezes. Em 1610 publicou <i>O Mensageiro das Estrelas</i>. Por defender Copérnico, foi julgado pela Inquisição em 1633 e viveu o resto da vida em prisão domiciliar.",
+    prob: "Se a Terra se movesse em volta do Sol, como a Lua não ficaria para trás? E por que tudo pareceria girar em volta da Terra?",
+    idea: [
+      "Em janeiro de 1610 ele viu quatro “estrelinhas” alinhadas com Júpiter que mudavam de lugar a cada noite: eram luas girando em volta de Júpiter.",
+      "Se Júpiter se move levando suas luas, a Terra também pode se mover levando a Lua.",
+      "Nem tudo gira em volta da Terra. Depois ele viu ainda as fases de Vênus, que só fazem sentido com Vênus girando em volta do Sol.",
+    ],
+    observe: [
+      "Pela luneta vemos as órbitas de lado: as luas parecem ir e voltar numa linha reta.",
+      "Io, a mais próxima, é a mais rápida (1,8 dia); Calisto, a mais distante, leva quase 17 dias.",
+      "Ligue <b>Vista de cima</b> para ver que o vaivém é um giro. O caderno anota as posições noite após noite, como Galileu fez.",
+    ],
+    terms: [["Luneta", "telescópio de lentes; Galileu a usou para observar o céu"], ["Luas galileanas", "Io, Europa, Ganimedes e Calisto"], ["Fases de Vênus", "Vênus muda de forma como a Lua"]],
+    next: "Galileu ainda acreditava em órbitas circulares e não sabia que força mantinha os planetas girando.",
+    math: "Cada lua: <code>θ = θ₀ + 2πt / T</code>. Da Terra vemos o plano das órbitas de lado, então só enxergamos <code>x = a·cos θ</code>; a lua some quando passa atrás de Júpiter. Períodos reais: Io 1,77 d · Europa 3,55 d · Ganimedes 7,15 d · Calisto 16,69 d. Distâncias em escala (raios de Júpiter).",
+  },
+  {
+    id: "kepler", g: 3, name: "Kepler", year: "1609", dates: "1571–1630 · Alemanha",
+    thesis: "As órbitas são elipses, e os planetas aceleram perto do Sol.",
+    ctx: "Matemático alemão, foi assistente de Tycho em Praga e herdou seus dados em 1601. Passou anos tentando entender a órbita de Marte. Publicou as duas primeiras leis em 1609 e a terceira em 1619, em plena Guerra dos Trinta Anos.",
+    prob: "Nenhuma combinação de círculos encaixava nos dados de Marte: sobrava um erro de 8 minutos de arco. Kepler confiou nos dados de Tycho e abandonou o círculo.",
+    idea: [
+      "<b>1ª lei:</b> a órbita é uma elipse, e o Sol fica num dos focos, não no centro.",
+      "<b>2ª lei:</b> a linha Sol–planeta varre áreas iguais em tempos iguais.",
+      "Por isso o planeta é mais rápido no periélio (perto do Sol) e mais lento no afélio (longe dele).",
+    ],
+    observe: [
+      "Cada fatia colorida leva o mesmo tempo: perto do Sol as fatias são curtas e largas; longe, compridas e finas.",
+      "A seta verde, a velocidade, cresce quando o planeta se aproxima do Sol.",
+      "Mude a <b>excentricidade</b>: em 0 a elipse vira círculo e a velocidade fica constante.",
+    ],
+    terms: [["Elipse", "curva oval com dois focos"], ["Excentricidade", "o quanto a elipse é achatada (0 = círculo)"], ["Periélio / afélio", "o ponto mais perto / mais longe do Sol"]],
+    next: "Kepler descreveu como os planetas se movem, mas não por quê. Imaginava uma força vinda do Sol, sem saber qual.",
+    math: "Equação de Kepler <code>M = E − e·sen E</code>, com <code>M = 2πt/T</code>, resolvida por Newton-Raphson. Posição: <code>x = a(cos E − e)</code>, <code>y = b·sen E</code>, <code>b = a√(1−e²)</code>. Razão das velocidades: <code>v_peri / v_afe = (1+e)/(1−e)</code>.",
+  },
+  {
+    id: "newton", g: 4, name: "Newton", year: "1687", dates: "1643–1727 · Inglaterra",
+    thesis: "A mesma força que derruba a maçã segura a Lua no céu.",
+    ctx: "Nasceu no ano em que Galileu morreu. Em 1665–1666, com a universidade fechada pela peste, desenvolveu ideias sobre gravidade, luz e cálculo. Publicou os <i>Principia</i> em 1687, com a ajuda de Halley. Suas leis inspiraram o Iluminismo.",
+    prob: "Que força mantém a Lua e os planetas em órbita? E por que as leis de Kepler funcionam?",
+    idea: [
+      "<b>Gravitação universal:</b> todos os corpos se atraem. A força cresce com as massas e diminui com o quadrado da distância.",
+      "Uma órbita é uma queda que nunca termina: o corpo cai em direção à Terra, mas anda tão rápido de lado que a superfície se curva para longe dele.",
+      "Com essa lei, Newton deduziu matematicamente as três leis de Kepler.",
+    ],
+    observe: [
+      "A animação começa com três disparos, cada um mais rápido: a bala cai cada vez mais longe.",
+      "Com <b>1,0 × v circular</b>, a bala dá a volta na Terra e não cai mais.",
+      "A seta vermelha, a gravidade, aponta sempre para o centro da Terra. Teste também <b>Elíptica</b> e <b>Escapa</b>.",
+    ],
+    terms: [["Gravidade", "atração entre corpos que têm massa"], ["Velocidade orbital", "cerca de 7,9 km/s rente à superfície da Terra"], ["Velocidade de escape", "rápida o bastante para nunca mais voltar"]],
+    next: "Newton explicou a força, mas não como ela agia à distância, sem nada tocando os corpos. Ele mesmo achava isso estranho.",
+    math: "Lei da gravitação <code>a = −GM·r / |r|³</code>, integrada passo a passo (método de Verlet). Órbita circular com <code>v = √(GM/r)</code>; abaixo disso a bala cai; acima, a órbita fica elíptica; com <code>v ≥ √2·v_circular</code> ela escapa. A montanha está exagerada.",
+  },
+  {
+    id: "halley", g: 4, name: "Halley", year: "1705", dates: "1656–1742 · Inglaterra",
+    thesis: "Prever a volta de um cometa e testar as leis de Newton.",
+    ctx: "Astrônomo inglês e amigo de Newton: convenceu-o a escrever os <i>Principia</i> e pagou a publicação. Também mapeou estrelas do hemisfério sul e criou tabelas de mortalidade.",
+    prob: "Os cometas eram vistos como avisos misteriosos que surgiam e sumiam. Seriam corpos obedecendo às mesmas leis dos planetas?",
+    idea: [
+      "Usando as leis de Newton, Halley notou que os cometas de 1531, 1607 e 1682 tinham órbitas quase iguais: era o mesmo cometa.",
+      "Previu que ele voltaria em 1758. Halley morreu antes, mas o cometa voltou no Natal de 1758: a primeira previsão desse tipo.",
+      "A órbita é uma elipse muito alongada, que vai de perto do Sol até além de Netuno.",
+    ],
+    observe: [
+      "Perto do Sol o cometa passa a mais de 50 km/s; longe dele, se arrasta a cerca de 1 km/s.",
+      "A cauda só aparece perto do Sol, quando o gelo do cometa evapora.",
+      "A cauda aponta sempre para longe do Sol, empurrada pelo vento solar. Na saída, ela vai à frente do cometa.",
+    ],
+    terms: [["Cometa", "bloco de gelo e poeira em órbita do Sol"], ["Vento solar", "partículas que o Sol lança em todas as direções"], ["Retrógrada", "órbita no sentido contrário ao dos planetas"]],
+    next: "As leis de Newton funcionavam muito bem, mas a órbita de Mercúrio girava um pouquinho mais do que a teoria previa. Algo faltava.",
+    math: "Equação de Kepler com <code>e = 0,967</code> e <code>a = 17,9 UA</code> (período <code>T = a^1,5 ≈ 75,5 anos</code>); velocidade <code>v = √(GM(2/r − 1/a))</code>. Cauda de íons na direção Sol → cometa. A órbita real é inclinada; aqui está projetada no plano. A câmera aproxima e desacelera perto do Sol.",
+  },
+  {
+    id: "einstein", g: 5, name: "Einstein", year: "1915", dates: "1879–1955 · Alemanha e Estados Unidos",
+    thesis: "A gravidade é a curvatura do espaço-tempo.",
+    ctx: "Físico alemão. Em 1905 publicou a relatividade restrita e <code>E = mc²</code>; em 1915, durante a Primeira Guerra, a relatividade geral. Em 1919, um eclipse observado em Sobral (CE) confirmou que a luz se curva perto do Sol. Deixou a Alemanha em 1933 por causa do nazismo.",
+    prob: "Como a gravidade age à distância? E por que o periélio de Mercúrio avança 43 segundos de arco por século a mais do que Newton previa?",
+    idea: [
+      "Espaço e tempo formam um único “tecido”: o espaço-tempo.",
+      "A massa curva esse tecido, e os corpos seguem o caminho mais reto possível no espaço curvo. É isso que chamamos de gravidade.",
+      "Perto de massas grandes o efeito é um pouco mais forte que em Newton: a órbita não fecha, e o periélio gira aos poucos.",
+    ],
+    observe: [
+      "Aumente a <b>massa do Sol</b>: a grade afunda mais e a órbita muda.",
+      "Com o efeito relativístico ligado, a elipse gira a cada volta (aqui exagerado cerca de um milhão de vezes).",
+      "Desligue o efeito: a órbita volta a ser a elipse fechada de Newton.",
+    ],
+    terms: [["Espaço-tempo", "espaço e tempo unidos num só “tecido”"], ["Curvatura", "a deformação desse tecido causada pela massa"], ["Precessão do periélio", "o giro lento da órbita a cada volta"]],
+    next: "As equações de Einstein indicavam que o universo não podia ficar parado: ou se expandia, ou se contraía. O próprio Einstein resistiu à ideia.",
+    math: "Grade (analogia do lençol): <code>z = −k·M / √(r² + s²)</code>. Órbita: <code>a = −(GM/r²)·(1 + 3L²/(c²r²))</code>. O segundo termo é a correção da relatividade (exagerada aqui) e faz o periélio avançar a cada volta, como acontece com Mercúrio (43″ por século).",
+  },
+  {
+    id: "hubble", g: 5, name: "Hubble", year: "1929", dates: "1889–1953 · Estados Unidos",
+    thesis: "Existem outras galáxias, e elas estão se afastando.",
+    ctx: "Formado em Direito, virou astrônomo e trabalhou no telescópio de 2,5 m do Monte Wilson, o maior da época. Mediu distâncias com as estrelas cefeidas, método descoberto por Henrietta Leavitt.",
+    prob: "As “nebulosas espirais” ficavam dentro da Via Láctea ou eram outras galáxias? E o universo é estático?",
+    idea: [
+      "Em 1924 mediu a distância de Andrômeda: muito além da Via Láctea. O universo tem bilhões de galáxias.",
+      "A luz das galáxias chega desviada para o vermelho: elas estão se afastando (efeito Doppler).",
+      "Em 1929: quanto mais distante, mais rápido a galáxia se afasta (<code>v = H·d</code>). O espaço se expande. Voltando o filme, tudo estava junto: a ideia do Big Bang, proposta por Lemaître.",
+    ],
+    observe: [
+      "As setas das galáxias distantes são mais longas e mais vermelhas.",
+      "No gráfico, velocidade e distância formam uma reta: é a lei de Hubble.",
+      "<b>Clique em outra galáxia</b>: de lá se vê o mesmo padrão. A expansão não tem centro.",
+    ],
+    terms: [["Galáxia", "conjunto de bilhões de estrelas, como a Via Láctea"], ["Desvio para o vermelho", "a luz de quem se afasta fica mais avermelhada"], ["Big Bang", "o universo começou quente e denso e vem se expandindo"]],
+    next: "<b>E hoje?</b> Sabemos que a expansão está acelerando (1998) e medimos a radiação que restou do Big Bang. A pergunta de Aristóteles, “como é o universo?”, continua aberta.",
+    last: true,
+    math: "Posição = <code>a(t) · posição comóvel</code>. Derivando: <code>v = ȧ·x = (ȧ/a)·d = H·d</code>, a lei de Hubble. Hoje <code>H₀ ≈ 70 km/s por megaparsec</code>. As galáxias não crescem: só o espaço entre elas aumenta.",
+  },
+];
+
+/* =====================================================================
+   Montagem da página: linha do tempo + uma exposição por cientista
+   ===================================================================== */
+const nav = document.querySelector("nav.timeline"), main = document.getElementById("expos");
+GROUPS.forEach((gname, gi) => {
+  const box = document.createElement("div"); box.className = "tgroup";
+  box.innerHTML = `<div class="gl">${gi + 1} · ${gname}</div><div class="row"></div>`;
+  EXPOS.filter((e) => e.g === gi + 1).forEach((e) => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.dataset.id = e.id;
+    b.innerHTML = `<span class="y">${e.year}</span><span class="nm">${e.name}</span>`;
+    b.addEventListener("click", () => show(EXPOS.indexOf(e)));
+    box.querySelector(".row").appendChild(b);
+  });
+  nav.appendChild(box);
+});
+
+const viewers = EXPOS.map((e, i) => {
+  const nextE = EXPOS[i + 1];
+  const sec = document.createElement("section");
+  sec.className = "expo"; sec.id = e.id; sec.setAttribute("aria-label", e.name);
+  sec.innerHTML = `
+    <div class="head">
+      <div><div class="kicker">Grupo ${e.g} · ${GROUPS[e.g - 1]}</div><h2>${e.name}</h2></div>
+      <div class="dates">${e.dates}</div>
+    </div>
+    <p class="thesis">${e.thesis}</p>
+    <div class="grid">
+      <div class="card" data-model="${e.id}">
+        <div class="stage"><canvas aria-label="Animação do modelo de ${e.name}"></canvas></div>
+        <div class="controls"></div>
+        <div class="observe"><h3>Observe na animação</h3><ol>${e.observe.map((o) => `<li>${o}</li>`).join("")}</ol></div>
+      </div>
+      <div class="info">
+        <div class="box ctx"><h3>Contexto</h3><p>${e.ctx}</p></div>
+        <div class="box prob"><h3>O problema</h3><p>${e.prob}</p></div>
+        <div class="box idea"><h3>A ideia</h3><ul>${e.idea.map((x) => `<li>${x}</li>`).join("")}</ul></div>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="kw"><h3>Palavras-chave</h3><div class="terms">${e.terms.map(([t, d]) => `<div class="term"><b>${t}</b>${d}</div>`).join("")}</div></div>
+      <div class="next"><h3>${e.last ? "Para fechar" : "O que ficou sem resposta"}</h3><p>${e.next}</p>
+        ${nextE ? `<button class="ctl primary" type="button" data-go="${i + 1}">Próximo: ${nextE.name} →</button>` : `<button class="ctl" type="button" data-go="0">↺ Voltar ao início</button>`}
+      </div>
+    </div>
+    <details class="math"><summary>A matemática por trás da animação</summary><p>${e.math}</p></details>`;
+  main.appendChild(sec);
+  sec.querySelector("[data-go]").addEventListener("click", (ev) => { show(+ev.currentTarget.dataset.go); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  return new Viewer(sec.querySelector(".card"));
+});
+
+/* ---------- Navegação e laço de animação (só anima a exposição visível) ---------- */
+let current = 0;
+function show(i) {
+  current = (i + EXPOS.length) % EXPOS.length;
+  document.querySelectorAll(".expo").forEach((s, k) => s.classList.toggle("active", k === current));
+  document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-current", String(c.dataset.id === EXPOS[current].id)));
+  const chip = document.querySelector(`.chip[data-id="${EXPOS[current].id}"]`);
+  nav.scrollTo({ left: chip.parentElement.parentElement.offsetLeft - 16, behavior: "smooth" }); // mantém o cientista atual visível no celular
+  document.getElementById("prev").disabled = current === 0;
+  document.getElementById("next").disabled = current === EXPOS.length - 1;
+  requestAnimationFrame(() => viewers[current].resize());
+  try { history.replaceState(null, "", "#" + EXPOS[current].id); } catch (e) { /* pré-visualização em iframe (about:srcdoc) não permite alterar o endereço */ }
+}
+document.getElementById("prev").addEventListener("click", () => show(current - 1));
+document.getElementById("next").addEventListener("click", () => show(current + 1));
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, summary")) return;
+  if (e.key === "ArrowRight" && current < EXPOS.length - 1) show(current + 1);
+  if (e.key === "ArrowLeft" && current > 0) show(current - 1);
+});
+const start = EXPOS.findIndex((e) => "#" + e.id === location.hash);
+show(start >= 0 ? start : 0);
+
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; // limita o passo se a aba ficou em segundo plano
+  viewers[current].frame(dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
