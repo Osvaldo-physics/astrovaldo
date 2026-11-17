@@ -1,0 +1,55 @@
+CRÉDITOS DAS MÍDIAS — Modelos astronômicos (Osvaldo Bezerra)
+
+retrato-aristoteles.jpg | Retrato | Aristóteles | Aristóteles | 384–322 a.C. · Atenas
+sim-aristoteles.gif | Simulação | Aristóteles | Esferas homocêntricas: Esferas concêntricas ao redor da Terra | GIF gravado da simulação desta página
+aristoteles-1.jpg | Documento histórico | Aristóteles | Cosmos aristotélico em Apiano, Cosmographia | 1539
+retrato-ptolomeu.jpg | Retrato | Ptolomeu | Ptolomeu | c. 100–170 d.C. · Alexandria
+sim-ptolomeu.gif | Simulação | Ptolomeu | Epiciclos e equante: Epiciclo, deferente e equante | GIF gravado da simulação desta página
+ptolomeu-1.jpg | Documento histórico | Ptolomeu | Epiciclo e equante em Peurbach, Theoricae novae planetarum | séc. XV
+ptolomeu-2.jpg | Documento histórico | Ptolomeu | Sistema de Ptolomeu em Cellarius, Harmonia macrocosmica | 1660
+retrato-copernico.jpg | Retrato | Copérnico | Copérnico | 1473–1543 · Frombork
+sim-copernico.gif | Simulação | Copérnico | Sol no centro: Planetas orbitando o Sol | GIF gravado da simulação desta página
+copernico-1.jpg | Documento histórico | Copérnico | Diagrama heliocêntrico em De revolutionibus, Livro I | 1543
+copernico-2.jpg | Documento histórico | Copérnico | Sistema copernicano em Cellarius, Harmonia macrocosmica | 1660
+retrato-tycho.jpg | Retrato | Tycho Brahe | Tycho Brahe | 1546–1601 · Uraniborg e Praga
+sim-tycho.gif | Simulação | Tycho Brahe | Geo-heliocêntrico: Sistema ticônico: planetas giram em torno do Sol, que gira em torno da Terra | GIF gravado da simulação desta página
+tycho-1.jpg | Documento histórico | Tycho Brahe | Quadrante mural em Astronomiae instauratae mechanica | 1598
+tycho-2.jpg | Documento histórico | Tycho Brahe | Nova Mundani Systematis Hypotyposis | 1588
+tycho-3.jpg | Documento histórico | Tycho Brahe | Planisphaerium Braheum em Cellarius | 1660
+tycho-4.jpg | Documento histórico | Tycho Brahe | A estrela nova de 1572 em De nova stella | 1573
+retrato-galileu.jpg | Retrato | Galileu Galilei | Galileu Galilei | 1564–1642 · Pádua e Florença
+sim-galileu-luas.gif | Simulação | Galileu Galilei | Telescópio: Luas de Júpiter | GIF gravado da simulação desta página
+sim-galileu-venus.gif | Simulação | Galileu Galilei | Telescópio: Fases de Vênus | GIF gravado da simulação desta página
+galileu-1.jpg | Documento histórico | Galileu Galilei | A Lua desenhada por Galileu e uma foto atual | 1610
+galileu-2.jpg | Documento histórico | Galileu Galilei | Júpiter e suas luas, noite após noite, Sidereus Nuncius | 1610
+galileu-3.jpg | Documento histórico | Galileu Galilei | Fases de Vênus desenhadas por Galileu, Il Saggiatore | 1623
+galileu-4.jpg | Documento histórico | Galileu Galilei | Saturno em Huygens, Systema Saturnium | 1659
+galileu-5.jpg | Documento histórico | Galileu Galilei | Dialogo sopra i due massimi sistemi: frontispício e folha de rosto | 1632
+retrato-kepler.jpg | Retrato | Johannes Kepler | Johannes Kepler | 1571–1630 · Praga e Linz
+sim-kepler-orbita.gif | Simulação | Johannes Kepler | Órbitas elípticas: Órbita elíptica e lei das áreas | GIF gravado da simulação desta página
+sim-kepler-3lei.gif | Simulação | Johannes Kepler | Órbitas elípticas: Terceira lei: T² e a³ | GIF gravado da simulação desta página
+kepler-1.jpg | Documento histórico | Johannes Kepler | Sólidos platônicos aninhados, Mysterium Cosmographicum | 1596
+kepler-2.jpg | Documento histórico | Johannes Kepler | Órbita de Marte em Astronomia nova | 1609
+kepler-3.jpg | Documento histórico | Johannes Kepler | Frontispício das Tabulae Rudolphinae | 1627
+retrato-newton.jpg | Retrato | Isaac Newton | Isaac Newton | 1643–1727 (nasc. 25/12/1642, calendário juliano) · Cambridge e Londres
+sim-newton-canhao.gif | Simulação | Isaac Newton | Gravitação universal: Canhão de Newton | GIF gravado da simulação desta página
+sim-newton-centro-massa.gif | Simulação | Isaac Newton | Gravitação universal: Centro de massa Terra-Lua | GIF gravado da simulação desta página
+newton-1.jpg | Documento histórico | Isaac Newton | Canhão de Newton em A Treatise of the System of the World | 1728
+newton-2.jpg | Documento histórico | Isaac Newton | Folha de rosto dos Principia | 1687
+retrato-halley.jpg | Retrato | Edmond Halley | Edmond Halley | 1656–1742 · Londres
+sim-halley.gif | Simulação | Edmond Halley | Cometas previsíveis: Órbita do cometa Halley | GIF gravado da simulação desta página
+halley-1.jpg | Documento histórico | Edmond Halley | Synopsis of the Astronomy of Comets: elementos orbitais de cada cometa | 1705
+halley-2.jpg | Documento histórico | Edmond Halley | Tabela geral para calcular o movimento de um cometa em órbita parabólica | 1705
+halley-3.jpg | Documento histórico | Edmond Halley | Construção geométrica da tabela (órbita parabólica) | 1705
+halley-4.jpg | Documento histórico | Edmond Halley | Carta de Newton a Halley sobre o cometa de 1680 (Cambridge University Library, CC BY-NC 4.0) | 1724
+retrato-einstein.jpg | Retrato | Albert Einstein | Albert Einstein | 1879–1955 · Berlim
+sim-einstein.gif | Simulação | Albert Einstein | Relatividade geral: Curvatura do espaço-tempo | GIF gravado da simulação desta página
+einstein-1.jpg | Documento histórico | Albert Einstein | Negativo do eclipse de 29/05/1919 (Dyson, Eddington e Davidson) | 1919
+einstein-2.jpg | Documento histórico | Albert Einstein | Primeira página de Die Grundlage der allgemeinen Relativitätstheorie, Annalen der Physik | 1916
+retrato-hubble.jpg | Retrato | Edwin Hubble | Edwin Hubble | 1889–1953 · Monte Wilson
+sim-hubble-expansao.gif | Simulação | Edwin Hubble | Universo em expansão: Expansão do universo | GIF gravado da simulação desta página
+sim-hubble-luz.gif | Simulação | Edwin Hubble | Universo em expansão: Luz e desvio para o vermelho | GIF gravado da simulação desta página
+hubble-1.jpg | Documento histórico | Edwin Hubble | Gráfico velocidade × distância de Hubble, PNAS | 1929
+
+GIFs (sim-*.gif): © Osvaldo Bezerra, gravados das simulações do projeto.
+Retratos e documentos: obras antigas em domínio público, exceto halley-4.jpg (carta de Newton a Halley, Cambridge University Library, licença CC BY-NC 4.0, uso não comercial). Confira a licença de cada arquivo no Wikimedia Commons.
