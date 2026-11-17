@@ -1087,7 +1087,7 @@ const Kepler = {
 
 /* =====================================================================
    7 — NEWTON: (a) canhão no alto da montanha; (b) baricentro de dois corpos
-   (a) GM = 1, raio da Terra = 1, lançamento horizontal a r0 = 1,14 (montanha exagerada).
+   (a) GM = 1, raio da Terra = 1, lançamento horizontal a r0 = 1,14 (montanha exagerada). Até 6 corpos ao mesmo tempo; cada um segue até cair, escapar (r > 60) ou orbitar sem parar.
        v_circ = √(GM/r0);  v_escape = √2·v_circ.  Integração: leapfrog (kick-drift-kick).
    (b) Dois corpos giram em torno do centro de massa:
        r1 = −μ₂·r_rel,  r2 = +μ₁·r_rel,  μᵢ = mᵢ/(m₁+m₂).
@@ -1097,21 +1097,31 @@ const Newton = {
   R0: 1.14,
   modes: [{ id: "canhao", label: "Canhão de Newton" }, { id: "bary", label: "Centro de massa" }],
   reset(s) {
-    s.vr = s.vr ?? 0.8; s.far = s.far ?? false; s.gvec = s.gvec ?? true; s.hist = [];
+    s.vr = s.vr ?? 0.8; s.far = s.far ?? false; s.gvec = s.gvec ?? true; s.spd = s.spd ?? 1;
     s.lq = s.lq ?? -1.0; s.M = 0; s.pre = s.pre ?? ""; s.n1 = s.n1 ?? "corpo 1"; s.n2 = s.n2 ?? "corpo 2";
-    this.fire(s, true);
+    s.ps = []; s.nid = 0; this.add(s, s.vr);
   },
   onMode() {},
-  fire(s, first) {
-    if (s.p && !first && s.p.trail.length > 4) { s.hist.push(s.p.trail); if (s.hist.length > 3) s.hist.shift(); }
-    const r0 = this.R0, v = s.vr * Math.sqrt(1 / r0);
-    s.p = { x: 0, y: r0, vx: v, vy: 0, alive: true, trail: [[0, r0]], t: 0, hit: null };
+  COLORS: ["#ffd25e", "#6cc4ff", "#ff8fa3", "#7be0a6", "#c9a2ff", "#ff9f43"],
+  // lança um corpo novo (máx. 6); se já houver 6, o mais antigo sai
+  add(s, vr) {
+    const r0 = this.R0, v = vr * Math.sqrt(1 / r0), id = s.nid++;
     const E = v * v / 2 - 1 / r0, hh = r0 * v;
-    if (E >= -1e-9) s.info = s.vr >= 1.4142 ? "velocidade ≥ de escape: a trajetória é aberta" : "trajetória aberta (parábola)";
+    let kind;
+    if (E >= -1e-9) kind = vr >= 1.4142 ? "escapa (≥ v de escape)" : "escapa (parábola)";
     else {
       const a = -1 / (2 * E), e = Math.sqrt(Math.max(0, 1 + 2 * E * hh * hh)), rp = a * (1 - e);
-      s.info = Math.abs(s.vr - 1) < 0.006 ? "órbita circular" : rp < 1 ? "elipse que corta o solo: o projétil cai" : "órbita fechada: o projétil nunca cai";
+      kind = Math.abs(vr - 1) < 0.006 ? "órbita circular" : rp < 1 ? "elipse que corta o solo: cai" : "órbita fechada: não cai";
     }
+    const p = { id, col: this.COLORS[id % this.COLORS.length], vr, kind, x: 0, y: r0, vx: v, vy: 0, state: "voa", trail: [[0, r0]], t: 0, hit: null, lastx: 0, lasty: r0, laps: 0, ang: 0 };
+    s.ps.push(p); if (s.ps.length > 6) s.ps.shift();
+    return p;
+  },
+  // muda a velocidade do corpo mais recente (reinicia só esse)
+  fire(s) {
+    const last = s.ps[s.ps.length - 1];
+    if (last) s.ps.pop();
+    this.add(s, s.vr);
   },
   controls(s) {
     if (s.mode === "bary") {
@@ -1124,25 +1134,35 @@ const Newton = {
       ];
     }
     return [
-      { type: "range", label: "Velocidade de lançamento", min: 0.3, max: 1.5, step: 0.01, get: () => s.vr, set: (x) => { s.vr = x; this.fire(s); }, fmt: (x) => fmt(x, 2) + " × v circular" },
-      { type: "button", label: "Disparar de novo", action: () => this.fire(s) },
+      { type: "range", label: "Velocidade do próximo lançamento", min: 0.3, max: 1.5, step: 0.01, get: () => s.vr, set: (x) => { s.vr = x; this.fire(s); }, fmt: (x) => fmt(x, 2) + " × v circular" },
+      { type: "button", label: "＋ Lançar outro corpo", action: () => this.add(s, s.vr) },
+      { type: "button", label: "Lançar série (0,7 · 0,9 · 1,0 · 1,2 · 1,45)", action: () => { s.ps = []; [0.7, 0.9, 1, 1.2, 1.45].forEach((v) => this.add(s, v)); } },
+      { type: "button", label: "Limpar e recomeçar", action: () => { s.ps = []; this.add(s, s.vr); } },
+      { type: "range", label: "Velocidade da animação", min: 0.5, max: 6, step: 0.5, get: () => s.spd, set: (x) => { s.spd = x; }, fmt: (x) => fmt(x, 1) + "×" },
       { type: "seg", label: "Alcance", options: [{ id: "n", label: "Perto da Terra" }, { id: "f", label: "Longe" }], get: () => (s.far ? "f" : "n"), set: (id) => { s.far = id === "f"; } },
       { type: "toggle", label: "Seta da gravidade", get: () => s.gvec, set: (v) => { s.gvec = v; } },
     ];
   },
   update(s, dt) {
     if (s.mode === "bary") { s.M += dt * 0.7; return; }
-    const p = s.p; if (!p.alive) return;
-    const sim = dt * 1.6, n = Math.max(1, Math.ceil(sim / 0.008)), hs = sim / n;
-    for (let i = 0; i < n; i++) {
+    const live = s.ps.filter((p) => p.state === "voa"); if (!live.length) return;
+    // quando todos os corpos estão longe, a animação acelera sozinha
+    const rmin = Math.min(...live.map((p) => Math.hypot(p.x, p.y)));
+    const sim = dt * 1.6 * s.spd * Math.max(1, rmin / 2.2);
+    const hs0 = Math.min(0.03, Math.max(0.002, 0.004 * Math.pow(rmin, 1.5)));
+    const n = Math.max(1, Math.ceil(sim / hs0)), hs = sim / n;
+    for (let i = 0; i < n; i++) for (const p of live) {
+      if (p.state !== "voa") continue;
       let r = Math.hypot(p.x, p.y), ax = -p.x / r ** 3, ay = -p.y / r ** 3;
       p.vx += ax * hs / 2; p.vy += ay * hs / 2; p.x += p.vx * hs; p.y += p.vy * hs;
       r = Math.hypot(p.x, p.y); ax = -p.x / r ** 3; ay = -p.y / r ** 3;
       p.vx += ax * hs / 2; p.vy += ay * hs / 2; p.t += hs;
-      if (r < 1) { p.alive = false; p.hit = [p.x / r, p.y / r]; break; }
-      if (i % 2 === 0 && p.trail.length < 1500) p.trail.push([p.x, p.y]);
+      if (r < 1) { p.state = "caiu"; p.hit = [p.x / r, p.y / r]; p.trail.push([p.x / r, p.y / r]); continue; }
+      if (r > 60) { p.state = "escapou"; continue; }
+      // voltas completas: ângulo acumulado em torno da Terra
+      const ang = Math.atan2(p.y, p.x); let d = ang - p.ang; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; p.ang = ang; p.acc = (p.acc || 0) + d; p.laps = Math.floor(Math.abs(p.acc) / TAU);
+      if (Math.hypot(p.x - p.lastx, p.y - p.lasty) > 0.012 * r) { p.trail.push([p.x, p.y]); p.lastx = p.x; p.lasty = p.y; if (p.trail.length > 3500) p.trail.shift(); }
     }
-    if (p.alive && p.trail.length >= 1500) p.alive = false;
   },
   draw(ctx, w, h, s) { if (s.mode === "bary") this.drawBary(ctx, w, h, s); else this.drawCannon(ctx, w, h, s); },
   drawCannon(ctx, w, h, s) {
@@ -1153,21 +1173,24 @@ const Newton = {
     ctx.fillStyle = "#8a6d4a"; ctx.beginPath(); ctx.moveTo(cx - 0.09 * k, Y(1.0)); ctx.lineTo(cx, Y(r0)); ctx.lineTo(cx + 0.09 * k, Y(1.0)); ctx.closePath(); ctx.fill();
     sphere(ctx, cx, Y(r0), 3, "#f2b56b");
     label(ctx, "canhão", cx + 8, Y(r0) - 8, "#f6dcb4", "left", 10.5);
-    s.hist.forEach((tr, i) => { ctx.strokeStyle = `rgba(160,174,200,${0.18 + 0.12 * i})`; ctx.lineWidth = 1.2; ctx.beginPath(); tr.forEach((q, j) => (j ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])))); ctx.stroke(); });
-    const p = s.p;
-    ctx.strokeStyle = "#ffd25e"; ctx.lineWidth = 2; ctx.beginPath(); p.trail.forEach((q, j) => (j ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])))); ctx.stroke();
-    if (p.alive) {
-      sphere(ctx, X(p.x), Y(p.y), 4, "#ffe066", 2.4);
-      if (s.gvec) { const r = Math.hypot(p.x, p.y); arrow(ctx, X(p.x), Y(p.y), X(p.x) - p.x / r * 30, Y(p.y) + p.y / r * 30, "#ff7a7a", 2, 8); label(ctx, "gravidade", X(p.x) - p.x / r * 34 + 4, Y(p.y) + p.y / r * 34, "#ff9a9a", "left", 10); }
-    } else if (p.hit) {
-      label(ctx, "✱ impacto", X(p.hit[0]), Y(p.hit[1]) - 10, "#ff9a9a", "center", 11.5, 700);
+    for (const p of s.ps) {
+      ctx.strokeStyle = p.col; ctx.lineWidth = 1.8; ctx.globalAlpha = p.state === "voa" ? 1 : 0.65;
+      ctx.beginPath(); p.trail.forEach((q, j) => (j ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])))); ctx.stroke(); ctx.globalAlpha = 1;
+      if (p.state === "voa") {
+        sphere(ctx, X(p.x), Y(p.y), 4, p.col, 2.4);
+        if (s.gvec) { const r = Math.hypot(p.x, p.y); arrow(ctx, X(p.x), Y(p.y), X(p.x) - p.x / r * 26, Y(p.y) + p.y / r * 26, "#ff7a7a", 1.6, 7); }
+      } else if (p.state === "caiu" && p.hit) {
+        label(ctx, "✱", X(p.hit[0]), Y(p.hit[1]) - 4, p.col, "center", 13, 700);
+      }
     }
-    hud(ctx, [
-      { t: `Lançamento: ${fmt(s.vr, 2)} × v circular (≈ ${fmt(s.vr * 7.9, 1)} km/s)`, c: "#ffd25e", w: 700 },
-      { t: s.info, c: s.info.startsWith("elipse que corta") ? "#ff9a9a" : "#bff5d6", w: 700 },
-      { t: "escape ≈ 1,41 × v circular", c: "#a0aec8" },
-      { t: "montanha exagerada: no desenho, ela tem 14% do raio da Terra", c: "#7f8fab", s: 10.5 },
-    ]);
+    const L = [{ t: "Cada corpo segue até cair ou escapar", c: "#dfe6f3", w: 700 }];
+    for (const p of s.ps) {
+      const st = p.state === "caiu" ? "✱ caiu" : p.state === "escapou" ? "↗ escapou" : p.laps >= 1 ? `↻ ${p.laps} volta${p.laps > 1 ? "s" : ""}` : "voando";
+      L.push({ t: `● ${fmt(p.vr, 2)} × v circ. · ${st}`, c: p.col, w: 700, s: 11 });
+    }
+    L.push({ t: "escape ≈ 1,41 × v circ. (v circ. ≈ 7,9 km/s)", c: "#a0aec8", s: 10.5 });
+    if (w > 560) L.push({ t: "montanha exagerada (14% do raio)", c: "#7f8fab", s: 10.5 });
+    hud(ctx, L);
   },
   drawBary(ctx, w, h, s) {
     const q = Math.pow(10, s.lq), mu1 = 1 / (1 + q), mu2 = q / (1 + q), e = 0.3, b = Math.sqrt(1 - e * e);
@@ -1619,7 +1642,7 @@ const EXPOS = [
     prob: "Kepler deu as regras e Galileu estudou projéteis. Qual é a causa do movimento dos planetas, e por que ele segue as regras de Kepler?",
     idea: ["Sem força, um corpo mantém a velocidade (1ª lei). A Lua não segue reto porque é puxada para a Terra: ela “cai” continuamente, mas anda para o lado.", "A força de gravitação é F = G·M·m/r², para a maçã, a Lua e os planetas.", "Com essa lei se deduzem as três leis de Kepler."],
     observeBy: {
-      canhao: ["Com velocidade baixa, o projétil cai. Aumente até 1,00 (velocidade circular): ele orbita sem nunca chegar ao chão.", "Entre 1,00 e 1,41, as elipses ficam cada vez mais alongadas. Acima de 1,41 (velocidade de escape), a trajetória é aberta.", "Use <b>Alcance: Longe</b> para ver as elipses grandes e o projétil sair."],
+      canhao: ["Com velocidade baixa, o projétil cai. Aumente até 1,00 (velocidade circular): ele orbita sem nunca chegar ao chão, e as voltas são contadas.", "Use <b>＋ Lançar outro corpo</b> ou <b>Lançar série</b> para ver várias velocidades ao mesmo tempo: cada um segue até cair, escapar ou continuar em órbita.", "Entre 1,00 e 1,41 as elipses se alongam; acima de 1,41 (escape) a trajetória é aberta. Use <b>Alcance: Longe</b> para ver as elipses grandes e os corpos saindo."],
       bary: ["<b>Sol–Júpiter:</b> o centro de massa fica a ≈ 1,07 raio solar do centro do Sol, <b>fora</b> do Sol. O Sol “balança” em torno dele.", "<b>Terra–Lua:</b> o centro de massa fica a ≈ 4 670 km do centro da Terra, <b>dentro</b> dela (raio: 6 371 km).", "Massas iguais: os dois giram em torno do ponto médio. Quanto mais leve o segundo corpo, mais perto do primeiro fica o centro de massa."],
     },
     terms: [["Força gravitacional", "Atração entre massas, proporcional a M·m e inversamente proporcional a r²."], ["Velocidade de escape", "Velocidade mínima para não voltar: √2 vezes a velocidade circular."], ["Centro de massa", "Ponto em torno do qual um sistema de corpos gira."], ["Inércia", "Tendência de manter a velocidade se nenhuma força agir."]],
