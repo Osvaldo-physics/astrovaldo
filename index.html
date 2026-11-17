@@ -1178,7 +1178,7 @@ const Newton = {
       ctx.beginPath(); p.trail.forEach((q, j) => (j ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])))); ctx.stroke(); ctx.globalAlpha = 1;
       if (p.state === "voa") {
         sphere(ctx, X(p.x), Y(p.y), 4, p.col, 2.4);
-        if (s.gvec) { const r = Math.hypot(p.x, p.y); arrow(ctx, X(p.x), Y(p.y), X(p.x) - p.x / r * 26, Y(p.y) + p.y / r * 26, "#ff7a7a", 1.6, 7); }
+        if (s.gvec) { const r = Math.hypot(p.x, p.y), Lg = 46 * Math.pow(r0 / r, 2); /* comprimento ∝ g = GM/r² */ arrow(ctx, X(p.x), Y(p.y), X(p.x) - p.x / r * Lg, Y(p.y) + p.y / r * Lg, "#ff7a7a", Math.max(1.2, Math.min(2.6, Lg / 18)), 7); }
       } else if (p.state === "caiu" && p.hit) {
         label(ctx, "✱", X(p.hit[0]), Y(p.hit[1]) - 4, p.col, "center", 13, 700);
       }
@@ -1188,6 +1188,7 @@ const Newton = {
       const st = p.state === "caiu" ? "✱ caiu" : p.state === "escapou" ? "↗ escapou" : p.laps >= 1 ? `↻ ${p.laps} volta${p.laps > 1 ? "s" : ""}` : "voando";
       L.push({ t: `● ${fmt(p.vr, 2)} × v circ. · ${st}`, c: p.col, w: 700, s: 11 });
     }
+    if (s.gvec) L.push({ t: "seta vermelha = gravidade: comprimento ∝ 1/r²", c: "#ff9a9a", s: 10.5 });
     L.push({ t: "escape ≈ 1,41 × v circ. (v circ. ≈ 7,9 km/s)", c: "#a0aec8", s: 10.5 });
     if (w > 560) L.push({ t: "montanha exagerada (14% do raio)", c: "#7f8fab", s: 10.5 });
     hud(ctx, L);
@@ -1642,7 +1643,7 @@ const EXPOS = [
     prob: "Kepler deu as regras e Galileu estudou projéteis. Qual é a causa do movimento dos planetas, e por que ele segue as regras de Kepler?",
     idea: ["Sem força, um corpo mantém a velocidade (1ª lei). A Lua não segue reto porque é puxada para a Terra: ela “cai” continuamente, mas anda para o lado.", "A força de gravitação é F = G·M·m/r², para a maçã, a Lua e os planetas.", "Com essa lei se deduzem as três leis de Kepler."],
     observeBy: {
-      canhao: ["Com velocidade baixa, o projétil cai. Aumente até 1,00 (velocidade circular): ele orbita sem nunca chegar ao chão, e as voltas são contadas.", "Use <b>＋ Lançar outro corpo</b> ou <b>Lançar série</b> para ver várias velocidades ao mesmo tempo: cada um segue até cair, escapar ou continuar em órbita.", "Entre 1,00 e 1,41 as elipses se alongam; acima de 1,41 (escape) a trajetória é aberta. Use <b>Alcance: Longe</b> para ver as elipses grandes e os corpos saindo."],
+      canhao: ["Com velocidade baixa, o projétil cai. Aumente até 1,00 (velocidade circular): ele orbita sem nunca chegar ao chão, e as voltas são contadas.", "Use <b>＋ Lançar outro corpo</b> ou <b>Lançar série</b> para ver várias velocidades ao mesmo tempo: cada um segue até cair, escapar ou continuar em órbita.", "A <b>seta vermelha</b> é a gravidade: ela encolhe com o quadrado da distância (a 2× mais longe, ¼ do tamanho) e cresce quando o corpo volta a se aproximar da Terra.", "Entre 1,00 e 1,41 as elipses se alongam; acima de 1,41 (escape) a trajetória é aberta. Use <b>Alcance: Longe</b> para ver as elipses grandes e os corpos saindo."],
       bary: ["<b>Sol–Júpiter:</b> o centro de massa fica a ≈ 1,07 raio solar do centro do Sol, <b>fora</b> do Sol. O Sol “balança” em torno dele.", "<b>Terra–Lua:</b> o centro de massa fica a ≈ 4 670 km do centro da Terra, <b>dentro</b> dela (raio: 6 371 km).", "Massas iguais: os dois giram em torno do ponto médio. Quanto mais leve o segundo corpo, mais perto do primeiro fica o centro de massa."],
     },
     terms: [["Força gravitacional", "Atração entre massas, proporcional a M·m e inversamente proporcional a r²."], ["Velocidade de escape", "Velocidade mínima para não voltar: √2 vezes a velocidade circular."], ["Centro de massa", "Ponto em torno do qual um sistema de corpos gira."], ["Inércia", "Tendência de manter a velocidade se nenhuma força agir."]],
