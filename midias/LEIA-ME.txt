@@ -1,0 +1,4 @@
+Coloque aqui as imagens (jpg) para a aba Mídias. Se o arquivo não existir, o cartão mostra a ficha da obra.
+Nomes esperados:
+  retrato-<id>.jpg   (ids: aristoteles, ptolomeu, copernico, tycho, galileu, kepler, newton, halley, einstein, hubble)
+  <id>-1.jpg, <id>-2.jpg   documentos históricos (ptolomeu e newton e halley têm 2; os demais 1)
