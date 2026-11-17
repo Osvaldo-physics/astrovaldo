@@ -1,4 +1,3 @@
 Imagens históricas (domínio público) usadas na aba Mídias.
-Arquivo esperado: midias/<id>-<n>.jpg (até ~1100 px).
-Ainda ausente: retrato-halley.jpg (retrato de Edmond Halley).
+Arquivo esperado: midias/<id>-<n>.jpg e midias/retrato-<id>.jpg.
 Sem o arquivo, o site mostra um cartão alternativo com link de busca no Wikimedia Commons.

@@ -1913,60 +1913,209 @@ function loop(now) {
 // são carregados de midias/<arquivo> quando o arquivo existe; se não existir,
 // o cartão mostra a ficha da obra e um link de busca no Wikimedia Commons.
 // =====================================================================
-const SV = {
-  star: (x, y, r = 1.4) => `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--text)"/>`,
-  lab: (x, y, t, c = "var(--muted)", a = "middle") => `<text x="${x}" y="${y}" fill="${c}" font-size="11" text-anchor="${a}" font-family="system-ui,sans-serif">${t}</text>`,
-  ring: (cx, cy, r, c = "var(--line2)", w = 1.5, d = "") => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="${w}" ${d ? `stroke-dasharray="${d}"` : ""}/>`,
-  dot: (x, y, r, c) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`,
-};
+const SVG_BG = "#070c18";
+function mkSV(k) {
+  const f = (n) => Math.round(n * 10) / 10;
+  const S = {
+    defs: `<defs>
+<radialGradient id="sun-${k}"><stop offset="0" stop-color="#fff7d6"/><stop offset=".5" stop-color="#ffd25e"/><stop offset="1" stop-color="#ff9d2e"/></radialGradient>
+<radialGradient id="glow-${k}"><stop offset="0" stop-color="#ffc85a" stop-opacity=".55"/><stop offset="1" stop-color="#ffc85a" stop-opacity="0"/></radialGradient>
+<radialGradient id="hl-${k}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient>
+<radialGradient id="earth-${k}" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#8ccbff"/><stop offset=".6" stop-color="#2f78c8"/><stop offset="1" stop-color="#123a6e"/></radialGradient>
+<radialGradient id="vig-${k}"><stop offset="0" stop-color="#0d1630"/><stop offset="1" stop-color="#04070f"/></radialGradient>
+</defs>`,
+    id: k,
+    t: (x, y, s, c = "var(--text)", a = "middle", z = 13, w = 600) => `<text x="${f(x)}" y="${f(y)}" fill="${c}" font-size="${z}" font-weight="${w}" text-anchor="${a}" font-family="system-ui,sans-serif" stroke="${SVG_BG}" stroke-width="3.2" stroke-linejoin="round" paint-order="stroke">${s}</text>`,
+    ring: (cx, cy, r, c = "rgba(148,170,210,.38)", w = 1.3, d = "") => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="none" stroke="${c}" stroke-width="${w}"${d ? ` stroke-dasharray="${d}"` : ""}/>`,
+    line: (x1, y1, x2, y2, c = "rgba(148,170,210,.5)", w = 1.3, d = "") => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${c}" stroke-width="${w}"${d ? ` stroke-dasharray="${d}"` : ""} stroke-linecap="round"/>`,
+    dot: (x, y, r, c) => `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${c}"/>`,
+    stars(seed, n) {
+      let s = seed * 9301 + 49297, o = "";
+      const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+      for (let i = 0; i < n; i++) o += `<circle cx="${f(rnd() * 320)}" cy="${f(rnd() * 240)}" r="${f(0.4 + rnd() * 0.8)}" fill="#fff" opacity="${f(0.2 + rnd() * 0.45)}"/>`;
+      return o;
+    },
+    sun(x, y, r) { return `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r * 3.2)}" fill="url(#glow-${k})"/><circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="url(#sun-${k})"/>`; },
+    ball(x, y, r, c) { return `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${c}"/><circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="url(#hl-${k})"/>`; },
+    earth(x, y, r) {
+      return `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="url(#earth-${k})"/><ellipse cx="${f(x - r * 0.28)}" cy="${f(y - r * 0.12)}" rx="${f(r * 0.3)}" ry="${f(r * 0.46)}" fill="#5ec38a" opacity=".9" transform="rotate(25 ${f(x)} ${f(y)})"/><ellipse cx="${f(x + r * 0.38)}" cy="${f(y + r * 0.3)}" rx="${f(r * 0.24)}" ry="${f(r * 0.17)}" fill="#5ec38a" opacity=".9"/><circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="url(#hl-${k})"/>`;
+    },
+    arrow(x1, y1, x2, y2, c, w = 1.8) {
+      const a = Math.atan2(y2 - y1, x2 - x1), h = 7;
+      return `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2 - Math.cos(a) * h * 0.7)}" y2="${f(y2 - Math.sin(a) * h * 0.7)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/><polygon points="${f(x2)},${f(y2)} ${f(x2 - Math.cos(a - 0.45) * h)},${f(y2 - Math.sin(a - 0.45) * h)} ${f(x2 - Math.cos(a + 0.45) * h)},${f(y2 - Math.sin(a + 0.45) * h)}" fill="${c}"/>`;
+    },
+    P: (cx, cy, r, deg) => [cx + r * Math.cos(deg * Math.PI / 180), cy - r * Math.sin(deg * Math.PI / 180)],
+    num: (x, y, n, c) => `<circle cx="${f(x)}" cy="${f(y)}" r="7.5" fill="${c}"/><text x="${f(x)}" y="${f(y + 4)}" fill="${SVG_BG}" font-size="11.5" font-weight="800" text-anchor="middle" font-family="system-ui,sans-serif">${n}</text>`,
+  };
+  return S;
+}
 const MEDIA_SVG = {
-  aristoteles: () => `${SV.ring(160, 120, 100, "var(--violet)", 1.5, "3 4")}${SV.ring(160, 120, 78)}${SV.ring(160, 120, 56)}${SV.ring(160, 120, 34)}
-    ${[[160, 20], [236, 70], [70, 60], [250, 150], [110, 205], [60, 140], [215, 200]].map(([x, y]) => SV.star(x, y)).join("")}
-    ${SV.dot(160, 120, 11, "var(--accent2)")}${SV.dot(160, 42, 4, "var(--accent)")}${SV.dot(216, 120, 3.5, "var(--green)")}
-    ${SV.lab(160, 146, "Terra", "var(--accent2)")}${SV.lab(160, 12, "esfera das estrelas fixas", "var(--violet)")}${SV.lab(160, 234, "esferas de cristal em volta da Terra", "var(--muted)")}`,
-  ptolomeu: () => `${SV.ring(150, 120, 90, "var(--line2)", 1.5)}${SV.ring(228, 83, 30, "var(--accent)", 1.5)}
-    <line x1="150" y1="120" x2="240" y2="120" stroke="var(--line2)" stroke-dasharray="3 3"/>
-    <path d="M178 112 A32 32 0 0 1 228 83" fill="none" stroke="var(--accent)" stroke-dasharray="2 3"/>
-    ${SV.dot(228, 83, 4, "var(--accent)")}${SV.dot(250, 62, 6, "var(--green)")}${SV.dot(150, 120, 3, "var(--muted)")}${SV.dot(112, 120, 9, "var(--accent2)")}${SV.dot(188, 120, 3, "var(--red)")}
-    ${SV.lab(112, 144, "Terra")}${SV.lab(150, 136, "centro")}${SV.lab(194, 138, "equante", "var(--red)")}${SV.lab(268, 40, "planeta", "var(--green)")}${SV.lab(236, 128, "epiciclo", "var(--accent)")}${SV.lab(70, 36, "deferente", "var(--muted)")}`,
-  copernico: () => [30, 50, 72, 94, 112].map((r) => SV.ring(160, 120, r)).join("") + SV.ring(160, 120, 112, "var(--violet)", 1.2, "3 4") +
-    `${SV.dot(160, 120, 14, "var(--accent)")}${SV.dot(232, 120, 6, "var(--accent2)")}${SV.dot(240, 112, 2, "var(--text)")}${SV.dot(160, 48, 4, "var(--green)")}${SV.dot(77, 76, 3.5, "var(--red)")}${SV.dot(95, 215, 4, "var(--violet)")}
-    ${SV.lab(160, 124, "Sol", "var(--bg)")}${SV.lab(232, 142, "Terra + Lua", "var(--accent2)")}${SV.lab(160, 12, "estrelas fixas, muito longe", "var(--violet)")}`,
-  tycho: () => `${SV.ring(160, 130, 80, "var(--accent)", 1.5)}${SV.ring(160, 130, 100, "var(--violet)", 1.2, "3 4")}
-    ${SV.dot(160, 130, 10, "var(--accent2)")}${SV.dot(240, 130, 9, "var(--accent)")}${SV.ring(240, 130, 26)}${SV.ring(240, 130, 44)}${SV.ring(240, 130, 12)}
-    ${SV.dot(266, 130, 3.5, "var(--green)")}${SV.dot(240, 86, 4, "var(--red)")}${SV.dot(228, 130 + 12 * 0.9, 2.5, "var(--text)")}
-    ${SV.lab(160, 156, "Terra (centro)", "var(--accent2)")}${SV.lab(240, 168, "Sol", "var(--accent)")}${SV.lab(240, 196, "planetas giram em torno do Sol", "var(--muted)")}${SV.lab(160, 20, "o Sol e a Lua giram em torno da Terra", "var(--violet)")}`,
-  galileu: () => `<rect x="20" y="20" width="280" height="200" rx="8" fill="none" stroke="var(--line2)"/>
-    ${[["1ª noite", 56, [-60, -38, 24, 52]], ["2ª noite", 96, [-52, 10, 30, 60]], ["3ª noite", 136, [-70, -28, -18, 40]], ["4ª noite", 176, [-12, 14, 38, 66]]].map(([n, y, xs]) =>
-      `${SV.lab(30, y + 4, n, "var(--muted)", "start")}${SV.dot(190, y, 8, "var(--accent)")}${xs.map((x) => `<text x="${190 + x}" y="${y + 4}" fill="var(--text)" font-size="12" text-anchor="middle">*</text>`).join("")}`).join("")}
-    ${SV.lab(190, 212, "Júpiter e quatro luas", "var(--accent)")}`,
-  kepler: () => `<ellipse cx="160" cy="120" rx="130" ry="84" fill="none" stroke="var(--line2)" stroke-width="1.5"/>
-    <path d="M${160 + 63} 120 L${160 + 125} 100 A130 84 0 0 1 ${160 + 118} 150 Z" fill="var(--accent)" opacity=".35"/>
-    <path d="M${160 + 63} 120 L${160 - 70} 36 A130 84 0 0 0 ${160 - 118} 90 Z" fill="var(--accent2)" opacity=".35"/>
-    ${SV.dot(223, 120, 8, "var(--accent)")}${SV.dot(97, 120, 2.5, "var(--muted)")}${SV.dot(285, 100, 4, "var(--green)")}${SV.dot(92, 38, 4, "var(--green)")}
-    ${SV.lab(223, 146, "Sol", "var(--accent)")}${SV.lab(97, 140, "foco vazio")}${SV.lab(160, 232, "áreas iguais em tempos iguais", "var(--muted)")}`,
-  newton: () => `<path d="M30 200 A130 130 0 0 1 290 200" fill="none" stroke="var(--line2)" stroke-width="0"/>
-    ${SV.dot(160, 330, 150, "var(--accent2)")}<circle cx="160" cy="330" r="150" fill="var(--accent2)" opacity=".25"/>
-    <rect x="152" y="172" width="16" height="10" fill="var(--muted)"/>
-    <path d="M168 176 Q195 176 205 200 T215 188" fill="none" stroke="var(--red)" stroke-width="1.6" stroke-dasharray="4 3"/>
-    <path d="M168 176 Q250 170 270 210 " fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 3"/>
-    <path d="M168 176 Q300 150 305 90 Q300 30 160 22 Q10 30 15 110 Q20 165 152 176" fill="none" stroke="var(--green)" stroke-width="1.8"/>
-    ${SV.lab(196, 226, "cai perto", "var(--red)", "start")}${SV.lab(240, 150, "mais longe", "var(--accent)", "start")}${SV.lab(160, 12, "rápido o bastante: dá a volta", "var(--green)")}`,
-  halley: () => `<ellipse cx="190" cy="120" rx="140" ry="40" fill="none" stroke="var(--accent2)" stroke-width="1.6" transform="rotate(-12 190 120)"/>
-    ${SV.dot(114, 142, 9, "var(--accent)")}${SV.dot(278, 58, 3.5, "var(--text)")}<path d="M278 58 l22 -8 M278 58 l24 0" stroke="var(--muted)" stroke-width="1.2"/>
-    ${SV.dot(60, 150, 3.5, "var(--text)")}
-    ${SV.lab(120, 170, "Sol", "var(--accent)")}${SV.lab(60, 172, "perihélio")}${SV.lab(278, 38, "afélio, bem longe", "var(--muted)")}${SV.lab(160, 232, "volta a cada cerca de 76 anos", "var(--accent2)")}`,
-  einstein: () => `${[60, 90, 120, 150, 180].map((y) => `<path d="M10 ${y} Q160 ${y + (y === 120 ? 70 : Math.max(0, 40 - Math.abs(y - 120) / 3))} 310 ${y}" fill="none" stroke="var(--line2)"/>`).join("")}
-    ${SV.dot(160, 140, 18, "var(--accent)")}
-    <path d="M20 86 L300 86" stroke="var(--muted)" stroke-dasharray="4 4"/>
-    <path d="M20 86 Q160 120 300 86" fill="none" stroke="var(--green)" stroke-width="2"/>
-    ${SV.dot(20, 86, 4, "var(--text)")}${SV.dot(300, 86, 5, "var(--accent2)")}
-    ${SV.lab(160, 190, "massa curva o espaço-tempo", "var(--accent)")}${SV.lab(160, 74, "caminho reto (sem massa)", "var(--muted)")}${SV.lab(160, 232, "a luz segue a curva (exagerada)", "var(--green)")}`,
-  hubble: () => `<line x1="40" y1="200" x2="300" y2="200" stroke="var(--line2)"/><line x1="40" y1="200" x2="40" y2="30" stroke="var(--line2)"/>
-    ${[[70, 190], [100, 172], [130, 160], [160, 136], [190, 120], [220, 104], [250, 80], [280, 62]].map(([x, y]) => SV.dot(x, y, 4, "var(--accent2)")).join("")}
-    <line x1="40" y1="206" x2="290" y2="48" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
-    ${SV.lab(170, 222, "distância →", "var(--muted)")}<text x="16" y="116" fill="var(--muted)" font-size="11" text-anchor="middle" transform="rotate(-90 16 116)" font-family="system-ui,sans-serif">velocidade de afastamento →</text>
-    ${SV.lab(160, 20, "quanto mais longe, mais rápido se afasta", "var(--accent)")}`,
+  aristoteles: () => {
+    const S = mkSV("ar"), C = [160, 128], names = ["Lua", "Sol", "Vênus", "Mercúrio", "Marte", "Júpiter", "Saturno"];
+    const cols = ["#d9d6cf", "#ffd25e", "#f3e0b5", "#b9b2a8", "#e0603a", "#e5c49a", "#e8d39a"], ang = [215, 55, 320, 125, 245, 15, 160];
+    const R = names.map((_, i) => 36 + i * 11);
+    let o = S.defs + S.stars(1, 36) + S.ring(...C, 112, "rgba(108,196,255,.55)", 2) + S.ring(...C, 108, "rgba(108,196,255,.2)", 1);
+    for (let i = 0; i < 24; i++) { const [x, y] = S.P(...C, 110, i * 15 + 7); o += S.dot(x, y, 1.3, "#dcebff"); }
+    for (let i = R.length - 1; i >= 0; i--) o += `<circle cx="160" cy="128" r="${R[i] + 5.5}" fill="${i % 2 ? "rgba(242,181,107,.06)" : "rgba(108,196,255,.06)"}"/>` + S.ring(...C, R[i], "rgba(242,181,107,.45)", 1.2);
+    o += `<circle cx="160" cy="128" r="28" fill="rgba(124,255,178,.12)" stroke="#7cffb2" stroke-width="1.5" stroke-dasharray="4 3"/>` + S.earth(160, 128, 11);
+    names.forEach((n, i) => {
+      const [x, y] = S.P(...C, R[i], ang[i]), r = i === 1 ? 6.5 : i >= 5 ? 5 : 4;
+      o += i === 1 ? S.sun(x, y, r) : S.ball(x, y, r, cols[i]);
+      const right = x >= 160; o += S.t(x + (right ? 8 : -8), y + (y < 128 ? -6 : 14), n, "var(--text)", right ? "start" : "end", 11.5, 600);
+    });
+    o += S.t(160, 156, "Terra", "#9fd0ff", "middle", 11, 700);
+    o += S.t(6, 16, "estrelas fixas", "#a9c7ef", "start", 12) + S.t(6, 218, "● sublunar", "#7cffb2", "start", 12) + S.t(6, 234, "● supralunar", "#f2b56b", "start", 12);
+    return o;
+  },
+  ptolomeu: () => {
+    const S = mkSV("pt"), E = [140, 128], Cc = [170, 128], Q = [200, 128], R = 88, r = 28;
+    const D = [Cc[0] + R * Math.cos(-0.7), Cc[1] + R * Math.sin(-0.7)], Pp = [D[0] + r * Math.cos(-0.9), D[1] + r * Math.sin(-0.9)];
+    let o = S.defs + S.stars(2, 34);
+    o += S.ring(...Cc, R, "rgba(242,181,107,.7)", 1.6) + S.ring(...D, r, "rgba(108,196,255,.85)", 1.6);
+    o += S.line(...Cc, ...D, "rgba(242,181,107,.55)", 1.2) + S.line(...Q, ...D, "#7cffb2", 1.4, "4 3") + S.line(...D, ...Pp, "rgba(108,196,255,.9)", 1.4);
+    o += S.line(110, 128, 262, 128, "rgba(148,170,210,.25)", 1, "2 4");
+    o += `<path d="M ${Cc[0] - 5} ${Cc[1] - 5} l10 10 M ${Cc[0] + 5} ${Cc[1] - 5} l-10 10" stroke="#f2b56b" stroke-width="1.6"/>`;
+    o += `<polygon points="${Q[0]},${Q[1] - 6} ${Q[0] + 6},${Q[1]} ${Q[0]},${Q[1] + 6} ${Q[0] - 6},${Q[1]}" fill="#7cffb2"/>`;
+    o += S.dot(...D, 3, "#6cc4ff") + S.earth(...E, 10) + S.ball(...Pp, 6, "#e0603a");
+    o += S.t(136, 154, "Terra", "#9fd0ff", "middle", 12, 700) + S.t(170, 112, "C centro", "#f2b56b", "middle", 12) + S.t(210, 152, "Q equante", "#7cffb2", "start", 12);
+    o += S.t(100, 58, "deferente", "#f2b56b", "end", 12.5) + S.t(D[0] + 34, D[1] + 30, "epiciclo", "#6cc4ff", "start", 12.5) + S.t(Pp[0] + 8, Pp[1] - 6, "planeta", "#ffb4a2", "start", 12.5);
+    o += S.t(160, 232, "planeta → epiciclo → deferente → Terra", "var(--muted)", "middle", 12, 500);
+    return o;
+  },
+  copernico: () => {
+    const S = mkSV("co"), C = [160, 120], R = [24, 38, 54, 70, 90, 108], names = ["Mercúrio", "Vênus", "Terra", "Marte", "Júpiter", "Saturno"];
+    const cols = ["#b9b2a8", "#f3e0b5", "#3b82d6", "#e0603a", "#e5c49a", "#e8d39a"], ang = [140, 255, 35, 200, 320, 100];
+    let o = S.defs + S.stars(3, 30);
+    R.forEach((r) => (o += S.ring(...C, r, "rgba(148,170,210,.4)", 1.2)));
+    o += S.sun(...C, 12);
+    names.forEach((n, i) => {
+      const [x, y] = S.P(...C, R[i], ang[i]);
+      if (i === 2) {
+        o += S.ring(x, y, 12, "rgba(220,220,220,.35)", 1) + S.earth(x, y, 6) + S.ball(...S.P(x, y, 12, 120), 2.2, "#d9d6cf");
+        o += S.t(x + 14, y + 4, "Terra + Lua", "#9fd0ff", "start", 12, 700);
+      } else {
+        o += S.ball(x, y, i >= 4 ? 5 : i === 3 ? 4 : 3.2, cols[i]);
+        if (i === 3 || i === 5 || i === 0) o += S.t(x + (x > 160 ? 7 : -7), y + (y > 120 ? 15 : -6), n, "var(--text)", x > 160 ? "start" : "end", 11.5);
+      }
+    });
+    o += S.t(160, 150, "Sol", "#ffd98a", "middle", 12.5, 700);
+    o += S.t(160, 234, "a Terra é um planeta como os outros", "var(--muted)", "middle", 12, 500);
+    return o;
+  },
+  tycho: () => {
+    const S = mkSV("ty"), E = [125, 124], rS = 54, a = -0.45, Sn = [E[0] + rS * Math.cos(a), E[1] + rS * Math.sin(a)], rM = 72;
+    const d = rS, aa = (rS * rS - rM * rM + d * d) / (2 * d), h = Math.sqrt(rS * rS - aa * aa), u = [(Sn[0] - E[0]) / d, (Sn[1] - E[1]) / d], pp = [-u[1], u[0]];
+    const X = [1, -1].map((sg) => [E[0] + aa * u[0] + sg * h * pp[0], E[1] + aa * u[1] + sg * h * pp[1]]);
+    let o = S.defs + S.stars(4, 30);
+    o += S.ring(...E, rS, "rgba(255,210,94,.75)", 1.6) + S.ring(...Sn, rM, "rgba(224,96,58,.85)", 1.5) + S.ring(...Sn, 30, "rgba(148,170,210,.5)", 1.1) + S.ring(...Sn, 16, "rgba(148,170,210,.5)", 1.1) + S.ring(...E, 20, "rgba(220,220,220,.35)", 1);
+    o += S.ball(...S.P(...Sn, 30, 200), 3.5, "#f3e0b5") + S.ball(...S.P(...Sn, 16, 40), 3, "#b9b2a8") + S.ball(...S.P(...Sn, rM, 100), 4.5, "#e0603a") + S.ball(...S.P(...E, 20, 70), 2.3, "#d9d6cf");
+    o += S.earth(...E, 9) + S.sun(...Sn, 7);
+    X.forEach((p) => (o += S.t(p[0], p[1] + 5, "✕", "#ff7a7a", "middle", 17, 800)));
+    o += S.t(E[0], E[1] + 38, "Terra (imóvel)", "#9fd0ff", "middle", 12, 700) + S.t(Sn[0] + 9, Sn[1] - 10, "Sol", "#ffd98a", "start", 12.5, 700);
+    o += S.t(4, 86, "órbita do Sol", "#ffd25e", "start", 12) + S.t(316, 178, "órbita de Marte", "#ff9a8a", "end", 12);
+    o += S.t(160, 232, "✕ as órbitas de Marte e do Sol se cruzam", "#ff9a9a", "middle", 12, 600);
+    return o;
+  },
+  galileu: () => {
+    const S = mkSV("ga"), C = [96, 116];
+    let o = S.defs + `<clipPath id="clip-ga"><circle cx="96" cy="116" r="80"/></clipPath>` + S.stars(5, 20);
+    o += `<circle cx="96" cy="116" r="84" fill="#3a4a66"/><circle cx="96" cy="116" r="80" fill="url(#vig-ga)"/>`;
+    o += `<g clip-path="url(#clip-ga)">${S.stars(6, 22).replace(/cx="(\d+(\.\d)?)"/g, (m, v) => `cx="${+v * 0.5 + 16}"`)}</g>`;
+    o += `<g clip-path="url(#clip-ga)"><circle cx="96" cy="116" r="17" fill="#e8d2ad"/><rect x="79" y="102" width="34" height="5" fill="#b98a5c"/><rect x="79" y="112" width="34" height="4" fill="#c99d70"/><rect x="79" y="122" width="34" height="6" fill="#a9774c"/><rect x="79" y="132" width="34" height="3" fill="#c79a6a"/></g><circle cx="96" cy="116" r="17" fill="url(#hl-ga)"/>`;
+    [[-62, "I", "#f2d36b"], [-33, "E", "#e4d6bd"], [38, "G", "#c9c0b2"], [64, "C", "#a39888"]].forEach(([dx, l, c]) => (o += S.ball(96 + dx, 116, 3.4, c) + S.t(96 + dx, 105, l, "#9fb0cc", "middle", 11, 700)));
+    o += S.t(96, 226, "visão pela luneta", "#9fb0cc", "middle", 12);
+    o += `<rect x="192" y="26" width="122" height="190" rx="8" fill="#14192b" stroke="#6b5a3c" stroke-width="1.4"/>`;
+    o += S.t(253, 46, "caderno de Galileu", "#f2b56b", "middle", 12, 700);
+    [[-38, -22, 14, 36], [-36, 6, 24, 44], [-42, -28, -12, 30], [-10, 10, 30, 46]].forEach((xs, i) => {
+      const y = 76 + i * 34; o += S.t(200, y + 4, `${i + 1}ª`, "#d3c4a4", "start", 11.5, 500) + `<circle cx="256" cy="${y}" r="5" fill="none" stroke="#c9b99a" stroke-width="1.3"/>` + xs.map((x) => `<text x="${256 + x}" y="${y + 5}" fill="#efe3c6" font-size="14" text-anchor="middle" font-family="system-ui,sans-serif">✶</text>`).join("");
+    });
+    o += S.t(253, 208, "luas mudam de lugar", "#a0aec8", "middle", 11, 500);
+    return o;
+  },
+  kepler: () => {
+    const S = mkSV("ke"), cx = 145, cy = 122, A = 118, B = 96, c = Math.sqrt(A * A - B * B), e = c / A, Sn = [cx + c, cy];
+    const pt = (M) => { const E = solveKepler(M, e); return [cx + A * Math.cos(E), cy - B * Math.sin(E)]; };
+    const wedge = (m1, m2, col) => { let d = `M${f2(Sn[0])} ${f2(Sn[1])}`; for (let i = 0; i <= 16; i++) { const p = pt(m1 + (m2 - m1) * i / 16); d += ` L${f2(p[0])} ${f2(p[1])}`; } return `<path d="${d} Z" fill="${col}" fill-opacity=".38" stroke="${col}" stroke-width="1"/>`; };
+    const f2 = (n) => Math.round(n * 10) / 10;
+    const vel = (M, len) => { const E = solveKepler(M, e), p = pt(M), dx = -A * Math.sin(E), dy = -B * Math.cos(E), n = Math.hypot(dx, dy); return S.arrow(p[0], p[1], p[0] + dx / n * len, p[1] + dy / n * len, "#ffd25e", 2); };
+    let o = S.defs + S.stars(7, 30);
+    o += `<ellipse cx="${cx}" cy="${cy}" rx="${A}" ry="${B}" fill="none" stroke="rgba(242,181,107,.7)" stroke-width="1.6"/>`;
+    o += wedge(-0.45, 0.45, "#6cc4ff") + wedge(Math.PI - 0.45, Math.PI + 0.45, "#7cffb2");
+    o += S.sun(...Sn, 7);
+    o += `<path d="M${cx - c - 4} ${cy - 4} l8 8 M${cx - c + 4} ${cy - 4} l-8 8" stroke="#7f8fab" stroke-width="1.5"/>`;
+    o += vel(0.45, 38) + S.ball(...pt(0.45), 5, "#6cc4ff") + vel(Math.PI + 0.45, 15) + S.ball(...pt(Math.PI + 0.45), 4.5, "#6cc4ff");
+    o += S.t(Sn[0] - 4, Sn[1] + 22, "Sol (foco)", "#ffd98a", "middle", 12, 700) + S.t(cx - c, cy + 22, "foco vazio", "#9aa8c2", "middle", 11.5, 500);
+    o += S.t(268, 96, "periélio", "#9fd7ff", "start", 12, 700) + S.t(4, 98, "afélio", "#b5f5d2", "start", 12, 700);
+    o += S.t(160, 232, "áreas iguais em tempos iguais (T/8 cada)", "var(--muted)", "middle", 12, 500);
+    return o;
+  },
+  newton: () => {
+    const S = mkSV("ne"), C = [160, 122], rE = 54, V = [160, 62];
+    const surf = (deg) => S.P(...C, rE, 90 - deg);
+    let o = S.defs + S.stars(8, 34);
+    o += `<ellipse cx="160" cy="144" rx="79" ry="82" fill="none" stroke="#6cc4ff" stroke-width="1.6" stroke-dasharray="5 3"/>`;
+    o += S.ring(...C, 60, "#7cffb2", 1.6, "5 3");
+    const a1 = surf(20), a2 = surf(50);
+    o += `<path d="M160 62 Q173 59 ${a1[0]} ${a1[1]}" fill="none" stroke="#ff7a7a" stroke-width="1.8"/><path d="M160 62 Q196 56 ${a2[0]} ${a2[1]}" fill="none" stroke="#f2b56b" stroke-width="1.8"/>`;
+    o += `<path d="M160 62 C226 54 286 84 314 150" fill="none" stroke="#ffd25e" stroke-width="1.8"/>`;
+    o += S.earth(...C, rE) + `<polygon points="150,69 170,69 160,62" fill="#8a6d4a"/><rect x="157" y="58" width="9" height="4.5" rx="1" fill="#c9c0b2" transform="rotate(-12 160 62)"/>`;
+    o += S.t(160, 50, "V", "var(--text)", "middle", 12.5, 800);
+    o += S.num(190, 63, 1, "#ff7a7a") + S.num(213, 83, 2, "#f2b56b") + S.num(91, 122, 3, "#7cffb2") + S.num(160, 216, 4, "#6cc4ff") + S.num(300, 120, 5, "#ffd25e");
+    [["#ff7a7a", "cai perto"], ["#f2b56b", "cai longe"], ["#7cffb2", "circular"], ["#6cc4ff", "elíptica"], ["#ffd25e", "escape"]].forEach(([c, t], i) => (o += S.num(13, 168 + i * 15 - 4, i + 1, c) + S.t(25, 168 + i * 15, t, "var(--text)", "start", 11.5, 500)));
+    o += S.t(316, 232, "mais rápido, mais longe", "var(--muted)", "end", 12, 500);
+    return o;
+  },
+  halley: () => {
+    const S = mkSV("ha"), cx = 185, cy = 122, A = 130, B = 36, c = Math.sqrt(A * A - B * B), th = -8 * Math.PI / 180;
+    const R = (x, y) => [cx + (x - cx) * Math.cos(th) - (y - cy) * Math.sin(th), cy + (x - cx) * Math.sin(th) + (y - cy) * Math.cos(th)];
+    const Sn = R(cx - c, cy), cm = R(cx - 85, cy - B * Math.sqrt(1 - (85 / A) ** 2)), ap = R(cx + A, cy), pe = R(cx - A, cy);
+    const dir = [cm[0] - Sn[0], cm[1] - Sn[1]], n = Math.hypot(...dir), u = [dir[0] / n, dir[1] / n];
+    let o = S.defs + S.stars(9, 34);
+    o += S.ring(...Sn, 38, "rgba(229,196,154,.45)", 1.1, "3 3") + S.ring(...Sn, 8, "rgba(59,130,214,.8)", 1.1);
+    o += `<ellipse cx="${cx}" cy="${cy}" rx="${A}" ry="${B}" fill="none" stroke="#6cc4ff" stroke-width="1.7" transform="rotate(-8 ${cx} ${cy})"/>`;
+    o += S.sun(...Sn, 6);
+    const e1 = [cm[0] + u[0] * 46, cm[1] + u[1] * 46], e2 = [cm[0] + u[0] * 36 - u[1] * 12, cm[1] + u[1] * 36 + u[0] * 12];
+    o += `<path d="M${cm[0]} ${cm[1]} L${e1[0]} ${e1[1]}" stroke="#78beff" stroke-width="2.4" stroke-linecap="round" opacity=".9"/><path d="M${cm[0]} ${cm[1]} Q${cm[0] + u[0] * 22 - u[1] * 2} ${cm[1] + u[1] * 22 + u[0] * 2} ${e2[0]} ${e2[1]}" stroke="#ffe1a0" stroke-width="4" stroke-linecap="round" fill="none" opacity=".8"/>`;
+    o += S.dot(...cm, 4, "#eaf6ff") + S.dot(...ap, 3.5, "#9fb0cc");
+    o += S.t(cm[0] + 12, cm[1] - 24, "cometa", "#d9efff", "start", 12.5, 700) + S.t(Sn[0] + 2, Sn[1] + 24, "Sol", "#ffd98a", "middle", 12.5, 700);
+    o += S.t(pe[0] + 8, pe[1] + 3, "", "#fff") + S.t(ap[0] - 6, ap[1] - 12, "afélio ≈ 35 UA", "#9fb0cc", "end", 12) + S.t(Sn[0] + 10, Sn[1] + 40, "periélio ≈ 0,6 UA", "#7cffb2", "start", 12);
+    o += S.t(6, 206, "tracejado: órbita de Júpiter", "#e5c49a", "start", 11.5, 500);
+    o += S.t(160, 232, "a cauda aponta sempre para longe do Sol", "var(--muted)", "middle", 12, 500);
+    return o;
+  },
+  einstein: () => {
+    const S = mkSV("ei"), cs = [160, 162], sg = 46, amp = 0.55;
+    const w = (x, y) => { const dx = cs[0] - x, dy = cs[1] - y, fct = amp * Math.exp(-(dx * dx + dy * dy) / (2 * sg * sg)); return [x + dx * fct, y + dy * fct]; };
+    let o = S.defs + S.stars(10, 26);
+    for (let i = 0; i <= 12; i++) {
+      let h = "", v = ""; const g = 10 + i * 25;
+      for (let j = 0; j <= 32; j++) { const t = j * 10, ph = w(t, g), pv = w(g, t * 0.75); h += (j ? "L" : "M") + `${ph[0].toFixed(1)} ${ph[1].toFixed(1)}`; if (g <= 310) v += (j ? "L" : "M") + `${pv[0].toFixed(1)} ${pv[1].toFixed(1)}`; }
+      if (g * 0.96 + 10 < 240) o += `<path d="${h}" fill="none" stroke="rgba(108,196,255,.32)" stroke-width="1"/>`;
+      if (g <= 310) o += `<path d="${v}" fill="none" stroke="rgba(108,196,255,.32)" stroke-width="1"/>`;
+    }
+    const Sr = [24, 120], Ob = [298, 120], Cc = [161, 92.6], ap = 120 - 0.2 * 274;
+    o += S.line(Sr[0], Sr[1], Ob[0], Ob[1], "rgba(160,174,200,.55)", 1.2, "4 4");
+    o += S.line(Ob[0], Ob[1], 24, ap, "rgba(255,210,94,.7)", 1.2, "3 3");
+    o += `<path d="M${Sr[0]} ${Sr[1]} Q${Cc[0]} ${Cc[1]} ${Ob[0]} ${Ob[1]}" fill="none" stroke="#7cffb2" stroke-width="2.6" stroke-linecap="round"/>`;
+    o += S.sun(...cs, 14) + S.dot(...Sr, 4.5, "#fff4cf") + `<circle cx="24" cy="${ap}" r="5" fill="none" stroke="#ffd25e" stroke-width="1.6"/>` + S.earth(...Ob, 8);
+    o += S.t(24, 146, "estrela real", "#fff4cf", "start", 12) + S.t(24, ap - 10, "posição aparente", "#ffd25e", "start", 12, 700) + S.t(298, 146, "Terra", "#9fd0ff", "end", 12, 700);
+    o += S.t(160, 196, "Sol", "#ffd98a", "middle", 12.5, 700) + S.t(160, 74, "a luz segue a curvatura", "#7cffb2", "middle", 12.5, 700);
+    o += S.t(160, 232, "massa curva o espaço-tempo (efeito exagerado)", "var(--muted)", "middle", 12, 500);
+    return o;
+  },
+  hubble: () => {
+    const S = mkSV("hu"), X0 = 52, Y0 = 196, X1 = 300, Y1 = 36;
+    let o = S.defs + S.stars(11, 18);
+    for (let i = 1; i <= 4; i++) o += S.line(X0, Y0 - i * 40, X1, Y0 - i * 40, "rgba(148,170,210,.16)", 1) + S.line(X0 + i * 50, Y0, X0 + i * 50, Y1, "rgba(148,170,210,.16)", 1);
+    o += S.arrow(X0, Y0, X1 + 6, Y0, "#9aa8c2", 1.6) + S.arrow(X0, Y0, X0, Y1 - 8, "#9aa8c2", 1.6);
+    o += S.line(X0, Y0 - 6, 292, 46, "#ffd25e", 1.8, "6 4");
+    const pts = [[0.4, 0.05], [0.9, -0.1], [1.4, 0.18], [1.9, 0.05], [2.4, -0.2], [2.9, 0.1], [3.4, 0.28], [3.9, -0.08], [4.4, 0.1], [4.8, -0.25]];
+    pts.forEach(([d, n]) => { const x = X0 + d * 48, y = Y0 - 6 - (d + n) * 31; o += S.dot(x, y, 4.6, "#6cc4ff") + S.dot(x - 1.2, y - 1.2, 1.4, "#cfeaff"); });
+    o += S.t(176, 218, "distância →", "#a0aec8", "middle", 12.5, 600) + `<text x="20" y="116" fill="#a0aec8" font-size="12.5" font-weight="600" text-anchor="middle" transform="rotate(-90 20 116)" font-family="system-ui,sans-serif">velocidade →</text>`;
+    o += S.t(190, 64, "v = H · d", "#ffd25e", "start", 15, 800) + S.t(60, 30, "cada ponto é uma galáxia", "#9fd0ff", "start", 12, 500);
+    o += S.t(160, 236, "quanto mais longe, mais rápido se afasta", "var(--muted)", "middle", 12, 500);
+    return o;
+  },
 };
 
 const MEDIA = {
@@ -1974,10 +2123,10 @@ const MEDIA = {
   ptolomeu: { cap: "Deferente, epiciclo e equante: o ajuste que Ptolomeu criou para acertar o movimento dos planetas.", docs: [{ t: "Epiciclo e equante em Peurbach, Theoricae novae planetarum", y: "séc. XV", f: "ptolomeu-1", q: "Peurbach Theoricae novae planetarum" }, { t: "Sistema de Ptolomeu em Cellarius, Harmonia macrocosmica", y: "1660", f: "ptolomeu-2", q: "Cellarius Harmonia Macrocosmica Ptolemaic" }], portrait: "Ptolemy portrait" },
   copernico: { cap: "O Sol no centro e a Terra como mais um planeta, girando em torno dele.", docs: [{ t: "Diagrama heliocêntrico em De revolutionibus, Livro I", y: "1543", f: "copernico-1", q: "Copernicus De revolutionibus heliocentric diagram" }, { t: "Sistema copernicano em Cellarius, Harmonia macrocosmica", y: "1660", f: "copernico-2", q: "Cellarius Scenographia Systematis Copernicani" }], portrait: "Nicolaus Copernicus portrait" },
   tycho: { cap: "Sistema híbrido: planetas giram em torno do Sol, e o Sol gira em torno da Terra.", docs: [{ t: "Quadrante mural em Astronomiae instauratae mechanica", y: "1598", f: "tycho-1", q: "Tycho Brahe Astronomiae instauratae mechanica mural quadrant" }, { t: "Nova Mundani Systematis Hypotyposis", y: "1588", f: "tycho-2", q: "Tycho Brahe De mundi aetherei 1588 system" }, { t: "Planisphaerium Braheum em Cellarius", y: "1660", f: "tycho-3", q: "Cellarius Planisphaerium Braheum" }, { t: "A estrela nova de 1572 em De nova stella", y: "1573", f: "tycho-4", q: "Tycho Brahe De nova stella 1573 Cassiopeia" }], portrait: "Tycho Brahe portrait" },
-  galileu: { cap: "Caderno de observação: as luas de Júpiter mudam de posição noite após noite.", docs: [{ t: "A Lua desenhada por Galileu e uma foto atual", y: "1610", f: "galileu-1", q: "Galileo Sidereus Nuncius moon drawings" }, { t: "Júpiter e suas luas, noite após noite, Sidereus Nuncius", y: "1610", f: "galileu-2", q: "Sidereus Nuncius Jupiter moons page" }, { t: "Fases de Vênus desenhadas por Galileu, Il Saggiatore", y: "1623", f: "galileu-3", q: "Galileo Il Saggiatore Venus phases" }, { t: "Saturno em Huygens, Systema Saturnium", y: "1659", f: "galileu-4", q: "Huygens Systema Saturnium Saturn" }], portrait: "Galileo Galilei portrait" },
+  galileu: { cap: "Caderno de observação: as luas de Júpiter mudam de posição noite após noite.", docs: [{ t: "A Lua desenhada por Galileu e uma foto atual", y: "1610", f: "galileu-1", q: "Galileo Sidereus Nuncius moon drawings" }, { t: "Júpiter e suas luas, noite após noite, Sidereus Nuncius", y: "1610", f: "galileu-2", q: "Sidereus Nuncius Jupiter moons page" }, { t: "Fases de Vênus desenhadas por Galileu, Il Saggiatore", y: "1623", f: "galileu-3", q: "Galileo Il Saggiatore Venus phases" }, { t: "Saturno em Huygens, Systema Saturnium", y: "1659", f: "galileu-4", q: "Huygens Systema Saturnium Saturn" }, { t: "Dialogo sopra i due massimi sistemi: frontispício e folha de rosto", y: "1632", f: "galileu-5", q: "Galileo Dialogo 1632 frontispiece title page" }], portrait: "Galileo Galilei portrait" },
   kepler: { cap: "Órbita elíptica com o Sol em um foco e áreas iguais varridas em tempos iguais.", docs: [{ t: "Sólidos platônicos aninhados, Mysterium Cosmographicum", y: "1596", f: "kepler-1", q: "Kepler Mysterium Cosmographicum platonic solids" }, { t: "Órbita de Marte em Astronomia nova", y: "1609", f: "kepler-2", q: "Kepler Astronomia nova Mars orbit" }, { t: "Frontispício das Tabulae Rudolphinae", y: "1627", f: "kepler-3", q: "Kepler Tabulae Rudolphinae frontispiece" }], portrait: "Johannes Kepler portrait" },
   newton: { cap: "Canhão no alto de uma montanha: com velocidade suficiente, a bala cai sem nunca chegar ao chão.", docs: [{ t: "Canhão de Newton em A Treatise of the System of the World", y: "1728", f: "newton-1", q: "Newton cannonball Treatise System of the World" }, { t: "Folha de rosto dos Principia", y: "1687", f: "newton-2", q: "Newton Principia 1687 title page" }], portrait: "Isaac Newton portrait" },
-  halley: { cap: "Órbita muito alongada de um cometa: perto do Sol em poucos meses, longe por décadas.", docs: [{ t: "Synopsis of the Astronomy of Comets: elementos orbitais de cada cometa", y: "1705", f: "halley-1", q: "Halley Synopsis astronomy of comets 1705" }, { t: "Tabela geral para calcular o movimento de um cometa em órbita parabólica", y: "1705", f: "halley-2", q: "Halley Synopsis general table parabolic orbit" }, { t: "Construção geométrica da tabela (órbita parabólica)", y: "1705", f: "halley-3", q: "Halley Synopsis comets diagram parabola" }], portrait: "Edmond Halley portrait" },
+  halley: { cap: "Órbita muito alongada de um cometa: perto do Sol em poucos meses, longe por décadas.", docs: [{ t: "Synopsis of the Astronomy of Comets: elementos orbitais de cada cometa", y: "1705", f: "halley-1", q: "Halley Synopsis astronomy of comets 1705" }, { t: "Tabela geral para calcular o movimento de um cometa em órbita parabólica", y: "1705", f: "halley-2", q: "Halley Synopsis general table parabolic orbit" }, { t: "Construção geométrica da tabela (órbita parabólica)", y: "1705", f: "halley-3", q: "Halley Synopsis comets diagram parabola" }, { t: "Carta de Newton a Halley sobre o cometa de 1680 (Cambridge University Library, CC BY-NC 4.0)", y: "1724", f: "halley-4", q: "Newton letter Halley 1724 comet 1680" }], portrait: "Edmond Halley portrait" },
   einstein: { cap: "Uma massa curva o espaço-tempo e a luz de uma estrela distante acompanha a curva (efeito exagerado no desenho).", docs: [{ t: "Negativo do eclipse de 29/05/1919 (Dyson, Eddington e Davidson)", y: "1919", f: "einstein-1", q: "Eddington 1919 eclipse photograph" }, { t: "Primeira página de Die Grundlage der allgemeinen Relativitätstheorie, Annalen der Physik", y: "1916", f: "einstein-2", q: "Einstein 1916 Grundlage allgemeinen Relativitätstheorie" }], portrait: "Albert Einstein portrait" },
   hubble: { cap: "Quanto mais longe a galáxia, maior a velocidade com que ela se afasta.", docs: [{ t: "Gráfico velocidade × distância de Hubble, PNAS", y: "1929", f: "hubble-1", q: "Hubble 1929 velocity distance diagram" }], portrait: "Edwin Hubble portrait" },
 };
@@ -2010,7 +2159,7 @@ const MEDIA = {
         <figcaption><span class="mtag t-${c.kind[0]}">${c.kind}</span><b>${esc(c.title)}</b><span class="msub">${esc(c.sub)}</span><span class="mwho">${EXPOS[c.i].name}</span>
           ${c.q ? `<a href="${commons(c.q)}" target="_blank" rel="noopener noreferrer">Ver no Wikimedia Commons ↗</a>` : ""}</figcaption>
       </figure>`).join("")}</div>
-    <p class="mnote">Créditos: ilustrações © Osvaldo Bezerra, desenhadas para este projeto. Documentos e retratos: obras anteriores ao século XX em domínio público; confira a licença e o crédito de cada arquivo ao baixá-lo no Wikimedia Commons.</p>
+    <p class="mnote">Créditos: ilustrações © Osvaldo Bezerra, desenhadas para este projeto. Documentos e retratos: obras antigas em domínio público, exceto a carta de Newton a Halley (Cambridge University Library, licença CC BY-NC 4.0, uso não comercial); confira a licença e o crédito de cada arquivo ao baixá-lo no Wikimedia Commons.</p>
     <dialog id="mdlg" aria-label="Mídia ampliada"><form method="dialog"><button class="ctl" aria-label="Fechar">Fechar ✕</button></form><div class="mbig"></div></dialog>`;
   let fi = -1, fk = "";
   const apply = () => {
