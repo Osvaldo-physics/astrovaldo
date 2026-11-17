@@ -1528,7 +1528,7 @@ const EXPOS = [
     next: "Copérnico mostra que a coincidência deixa de ser mistério se a Terra for um dos planetas que giram em torno do Sol.",
     math: "O centro do epiciclo D tem ângulo uniforme visto do equante Q, com |EC| = |CQ| = e·R (E = Terra, C = centro do deferente) e |CD| = R. O planeta fica em D mais um vetor de raio r, paralelo à direção Terra–Sol (planeta externo).",
     note: "Só Marte, com R = 1,52 UA e r = 1 UA (a razão real). A excentricidade inicial de 0,1 é um valor típico do Almagesto para Marte. O Sol gira em um círculo de 1 UA. O modelo de Vênus (em Galileu) é uma versão simplificada do esquema de Ptolomeu.",
-    cmp: ["A Terra (círculos levemente deslocados)", "Imóvel (quase no centro)", "Deferentes, epiciclos e equante", "Movimento circular uniforme, visto do equante", "Tabelas de observações (Almagesto)", "Posições, laços retrógrados, brilho", "Coincidência Sol–epiciclo; o equante contraria a uniformidade"],
+    cmp: ["A Terra (círculos levemente deslocados)", "Imóvel (quase no centro)", "Deferentes, epiciclos e equante", "Movimento circular uniforme, visto do equante", "Observações acumuladas desde a Babilônia e Hiparco, reunidas no Almagesto", "Posições, laços retrógrados, brilho", "Coincidência Sol–epiciclo; o equante contraria a uniformidade"],
   },
   {
     id: "copernico", g: 1, model: Copernico, name: "Copérnico", yl: "1543", dates: "1473–1543 · Frombork", tag: "Sol no centro",
@@ -1564,7 +1564,7 @@ const EXPOS = [
     next: "Galileu aponta o telescópio para o céu, e as observações vão separar Ptolomeu dos outros dois modelos.",
     math: "X(P) = P_helio − τ·Terra_helio. Com τ = 0, o referencial é o do Sol; com τ = 1, o da Terra. A diferença de posição entre quaisquer dois corpos não depende de τ.",
     note: "Mesma geometria do modelo de Copérnico, em escala linear real. A Lua tem distância exagerada. O símbolo ✕ marca os pontos em que a órbita de Marte (em torno do Sol) cruza a do Sol (em torno da Terra).",
-    cmp: ["A Terra (para o Sol e a Lua); o Sol (para os planetas)", "Imóvel, no centro", "Círculos", "Sem teoria física", "Dados de grande precisão; cometa de 1577", "Mesmas previsões de posição de Copérnico; sem paralaxe necessária", "Causa física; Sol orbitando a Terra"],
+    cmp: ["A Terra (para o Sol e a Lua); o Sol (para os planetas)", "Imóvel, no centro", "Círculos", "Sem teoria física", "Dados de grande precisão; cometa de 1577", "Mesmas previsões de posição de Copérnico; sem paralaxe necessária", "Causa física; por que o Sol, e não a Terra, carregaria os planetas"],
   },
   {
     id: "galileu", g: 2, model: Galileu, name: "Galileu Galilei", yl: "1610", dates: "1564–1642 · Pádua e Florença", tag: "Telescópio",
@@ -1585,7 +1585,7 @@ const EXPOS = [
     next: "Kepler, contemporâneo de Galileu, descobre a forma das órbitas com os dados de Tycho.",
     math: "Fração iluminada = (1 + cos i)/2, em que i é o ângulo Sol–Vênus–Terra. Em Ptolomeu, Vênus fica mais perto da Terra que o Sol, então i fica sempre acima de 90° e a fração, abaixo de 50%.",
     note: "Luas: períodos e distâncias reais (em raios de Júpiter). Vênus: o modelo de Ptolomeu usa um epiciclo de razão 0,72 centrado na linha Terra–Sol, com a mesma elongação máxima (≈ 46°) que o modelo heliocêntrico. A ordem de publicação de Kepler (1609) é anterior à de Galileu (1610).",
-    cmp: ["A Terra e também Júpiter (para suas luas)", "Imóvel ou em movimento: os dados não decidem", "Círculos", "Sem teoria física", "Telescópio: luas, fases, montanhas, manchas", "Refuta Ptolomeu; mostra um céu imperfeito", "Qual das duas hipóteses está certa; a causa do movimento"],
+    cmp: ["O Sol (Galileu defendeu Copérnico); Júpiter é centro de suas luas", "Em movimento, segundo Galileu; as observações sozinhas não excluem o modelo de Tycho", "Círculos", "Inércia e movimento relativo, sem lei de gravitação", "Telescópio: luas, fases, montanhas, manchas", "Refuta Ptolomeu (fases de Vênus); mostra um céu imperfeito", "Prova direta do movimento da Terra (paralaxe só em 1838); a causa do movimento"],
   },
   {
     id: "kepler", g: 2, model: Kepler, name: "Johannes Kepler", yl: "1609", dates: "1571–1630 · Praga e Linz", tag: "Órbitas elípticas",
@@ -1606,7 +1606,7 @@ const EXPOS = [
     next: "Newton liga as três leis a uma única força: a gravitação.",
     math: "Equação de Kepler: M = E − e·sen E (M é proporcional ao tempo). Posição: x = a·cos E, y = b·sen E, com b = a·√(1−e²). Velocidade: v² = GM·(2/r − 1/a). Razão entre as velocidades extremas: v_peri / v_afé = (1+e)/(1−e).",
     note: "A excentricidade e = 0,6 está exagerada para que a elipse apareça; as órbitas reais são quase circulares (Terra: 0,017; Marte: 0,093). As estações do ano <b>não</b> vêm da variação da distância ao Sol. Na 3ª lei, as órbitas estão em escala comprimida (raio ∝ √a).",
-    cmp: ["O Sol, num foco", "Um planeta", "Elipses", "Força do Sol (sem lei matemática)", "Dados de Tycho sobre Marte", "Forma exata das órbitas, velocidades, T² ∝ a³", "A causa física das leis"],
+    cmp: ["O Sol, num foco", "Um planeta", "Elipses", "Força vinda do Sol, que diminui com a distância (sem a lei correta)", "Dados de Tycho sobre Marte", "Forma exata das órbitas, velocidades, T² ∝ a³", "A causa física das leis"],
   },
   {
     id: "newton", g: 3, model: Newton, name: "Isaac Newton", yl: "1687", dates: "1643–1727 (nasc. 25/12/1642, calendário juliano) · Cambridge e Londres", tag: "Gravitação universal",
@@ -1627,7 +1627,7 @@ const EXPOS = [
     next: "Halley usa a nova teoria para prever o retorno de um cometa, a grande prova de Newton.",
     math: "Órbita circular: m·v²/r = G·M·m/r², logo v = √(GM/r) e T² = 4π²r³/(GM). Escape: v_e = √(2GM/r) = √2 · v_circ. Para dois corpos: T² = 4π²a³ / (G(M+m)); r₁ = −μ₂·r_rel e r₂ = +μ₁·r_rel (μᵢ = mᵢ/(m₁+m₂)).",
     note: "No canhão, a montanha é desenhada com 14% do raio da Terra para ficar visível, e não há atmosfera nem atrito (integração numérica, leapfrog). A velocidade de 1,00 equivale a ≈ 7,9 km/s. No centro de massa, a órbita relativa tem e = 0,3 e os tamanhos estão fora de escala.",
-    cmp: ["O centro de massa do sistema (perto do Sol)", "Um planeta, como os outros", "Elipse, parábola ou hipérbole", "Gravitação: F = G·M·m/r²", "Dedução das leis de Kepler; queda dos corpos", "Leis de Kepler, marés, cometas, queda e órbitas", "Ação à distância; 43″ de Mercúrio"],
+    cmp: ["O centro de massa do sistema (perto do Sol)", "Um planeta, como os outros", "Elipse, parábola ou hipérbole", "Gravitação: F = G·M·m/r²", "Dedução das leis de Kepler; queda dos corpos", "Leis de Kepler, marés, cometas, queda e órbitas", "Ação à distância; os 43″ por século no periélio de Mercúrio"],
   },
   {
     id: "halley", g: 3, model: Halley, name: "Edmond Halley", yl: "1705", dates: "1656–1742 · Londres", tag: "Cometas previsíveis",
@@ -1687,7 +1687,7 @@ const EXPOS = [
     next: "Fechamos o ciclo: da Terra no centro a um universo sem centro. Cada modelo respondeu a uma pergunta e abriu outras, e é assim que a ciência avança.",
     math: "v = H·d, com H = ȧ/a. Em coordenadas comóveis χ, a distância física é d = a(t)·χ. A luz obedece 1 + z = a(obs)/a(emit). A idade do universo é da ordem de 1/H₀ ≈ 14 bilhões de anos.",
     note: "A simulação é 2D, com 64 galáxias e unidades arbitrárias (H = 0,35 do exemplo, não 70 km/s/Mpc). Aparece só a região central: as galáxias mais distantes saem do quadro. A régua fixa mostra que a distância física aumenta.",
-    cmp: ["Nenhum: não há centro", "A Via Láctea é uma galáxia entre bilhões", "Distâncias crescem com a expansão do espaço", "Dinâmica do universo (relatividade geral)", "Cefeidas e desvio para o vermelho", "Expansão, idade, o Big Bang", "Energia escura, matéria escura, o “antes”"],
+    cmp: ["Nenhum: não há centro", "Um planeta numa galáxia (a Via Láctea) entre bilhões", "Distâncias crescem com a expansão do espaço", "Dinâmica do universo (relatividade geral)", "Cefeidas e desvio para o vermelho", "Expansão, idade, o Big Bang", "Energia escura, matéria escura, o “antes”"],
   },
 ];
 const N = EXPOS.length;
