@@ -1,4 +1,4 @@
 Imagens históricas (domínio público) usadas na aba Mídias.
 Arquivo esperado: midias/<id>-<n>.jpg (até ~1100 px).
-Ainda ausentes: os retratos dos cientistas.
+Ainda ausente: retrato-halley.jpg (retrato de Edmond Halley).
 Sem o arquivo, o site mostra um cartão alternativo com link de busca no Wikimedia Commons.
